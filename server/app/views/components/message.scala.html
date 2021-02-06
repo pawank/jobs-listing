@@ -1,0 +1,12 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil)
+@(assets: AssetsFinder, title: String, detail: String)(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang)
+
+<div class="ui warning message">
+    <i class="close icon"></i>
+    <div class="header">
+        @Html(title)
+    </div>
+    @Html(detail)
+</div>
+<script type="text/javascript">
+</script>

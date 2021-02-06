@@ -1,0 +1,483 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil)
+@(assets: AssetsFinder, job: shared.Job, educationsSkills: Seq[shared.DropdownValue])(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang)
+
+@job._key.map { uid =>
+<form class="ui form" id="form_@uid">
+    <h4 class="ui dividing header">@job.title [@job._key.getOrElse("")]</h4>
+    <div>
+        Open View <i class="icon search" onclick="showContent('@{job.sourceId.getOrElse("")}');"></i>
+        Close <i class="icon hide" onclick="closeForm('@uid');"></i>
+        <a href="@{routes.BackofficeController.jobs}?key=@{job._key.getOrElse("")}" target="_blank">
+        Refresh and Open <i class="icon refresh"></i>
+        </a>
+        @defining(System.getenv("ARANGODB_WEB_URL")) {web =>
+        <a href="@web/_db/portal/_admin/aardvark/index.html#collection/jds/@uid" target="_blank">Open Job in db</a>
+        <a href="@web/_db/portal/_admin/aardvark/index.html#collection/raw_jds/@job.sourceId.getOrElse("")" target="_blank">Open Ad in db</a>
+        }
+    </div>
+    <div class="field">
+    <label>Post Title</label>
+    <input type="text" name="title" placeholder="Post title" value="@{job.title}" required/>
+    </div>
+    <div class="field">
+        <label>No of Posts</label>
+        @defining(job.extras.map(_.stats.map(s => s.noPosts.getOrElse(0)).getOrElse(0)).getOrElse(0)) { noPosts =>
+        <input type="text" name="noPosts" placeholder="No of posts count" value="@{noPosts}" />
+        }
+        <help>No of posts as integer</help>
+    </div>
+    <div class="field remote">
+        <label>Company</label>
+        @***
+        <input type="text" id="company_@uid" name="company" value="@job.company" />
+        ***@
+        <div class="ui search selection dropdown employer" id="select_@uid">
+            <input name="company" type="hidden" value="@{job.company}" required/>
+            <i class="dropdown icon"></i>
+            <input type="text" class="search"/>
+            <div class="default text">Type and Select Employer name..</div>
+            @if(job.company.isEmpty) {
+            } else {
+            <div class="menu">
+                <div class="item" data-value="@{job.company}" data-text="@{job.company}">@{job.company} @{job.getCompanyUrl}</div>
+            </div>
+            }
+        </div>
+        <div class="ui button job clean" id="clean_@uid">
+            Clear
+        </div>
+        @job.extras.map { ext =>
+            @if(ext.employer.isDefined) {
+            @ext.employer.map {emp =>
+        <a href="@{routes.BackofficeController.employers}?key=@{emp._key.getOrElse("")}" target="_blank">Fix Employer</a>
+            }
+            } else {
+                <a href="@{routes.BackofficeController.employers}?search=@{job.company}" target="_blank">Fix Employer</a>
+            }
+        }
+    </div>
+    <div class="field">
+        <label>Job Public URL</label>
+        <div class="ui labeled input">
+            <div class="ui label">
+                http://
+            </div>
+            @defining(job.publicUrl.getOrElse("").replaceAll("""http://""","""https://""")) {s3url =>
+            <input type="text" name="publicUrl" value="@s3url" />
+            }
+            <div class="ui button job clean" id="s3pdf_@uid">
+                Fix PDF
+            </div>
+        </div>
+    </div>
+    <div class="field">
+        <label>Ad / Ref Link</label>
+        <div class="ui labeled input">
+            <div class="ui label">
+                http://
+            </div>
+            <input type="text" name="refLink" value="@job.refLink" />
+            <div class="ui button job clean" id="pdf_@uid">
+                Fix PDF
+            </div>
+        </div>
+    </div>
+    <div class="field">
+        <label>Original Link / PDF</label>
+        <div class="ui labeled input">
+            <div class="ui label">
+                URL
+            </div>
+            @defining(job.extras.map(_.originalPdf)){ originalPdf =>
+            <input type="text" name="originalPdf" value="@originalPdf" required/>
+            }
+            <div class="ui button job clean" id="original_pdf_@uid">
+                Fix PDF
+            </div>
+        </div>
+    </div>
+    <div class="field">
+        <label>Important Dates</label>
+        <div class="three fields">
+            <div class="field">
+                <label>Start date</label>
+                <div class="ui calendar" id="rangestart_@uid">
+                    <div class="ui input left icon">
+                        <i class="calendar icon"></i>
+                        <input type="text" placeholder="Start" name="startDate" autocomplete="off" value="@{job.startDate.getOrElse("")}"/>
+                    </div>
+                </div>
+            </div>
+            <div class="field">
+                <label>Last date</label>
+                <div class="ui calendar" id="rangeend_@uid">
+                    <div class="ui input left icon">
+                        <i class="calendar icon"></i>
+                        <input type="text" placeholder="Last date" name="endDate" autocomplete="off" value="@{job.endDate.getOrElse("")}"/>
+                    </div>
+                </div>
+            </div>
+            <div class="field">
+                <label>Exam / Interview date</label>
+                <div class="ui calendar" id="examdate_@uid">
+                    <div class="ui input left icon">
+                        <i class="calendar icon"></i>
+                        @job.extras.map {extra =>
+                        <input type="text" placeholder="Examination date" name="examDate" autocomplete="off" value=""/>
+                        }.getOrElse {
+                        <input type="text" placeholder="Examination date" name="examDate" autocomplete="off" value=""/>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="field">
+        <label>Educations</label>
+        <div class="ui fluid multiple search selection dropdown">
+            <input id="educations" name="educations" type="hidden" value="@{job.educations.mkString(",")}">
+            <i class="dropdown icon"></i>
+            <div class="default text">Matching value</div>
+            <div class="menu">
+                @for(v <- educationsSkills) {
+                <div class="item" data-value="@{v.value}" data-text="@{v.name}">@{v.name}</div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="field">
+        <div class="ui sub header">State / Centre</div>
+        <div class="ui fluid search selection dropdown">
+            @job.state.map {state =>
+                <input name="state" type="hidden" value="@state"/>
+            }.getOrElse {
+                @job.extras.map { ext =>
+                @ext.employer.map {emp =>
+                <input name="state" type="hidden" value="@{emp.extra.state}"/>
+                }.getOrElse {
+                <input name="state" type="hidden" value=""/>
+                }
+                }
+            }
+            <i class="dropdown icon"></i>
+            <div class="default text">State name</div>
+            <div class="menu">
+                @api.JobParser.CENTRE_WITH_STATE_NAMES.map {kv =>
+                <div class="item" data-value="@{kv}" data-text="@{kv}">@{kv}</div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="field">
+    <label>Location</label>
+    @if(job.extras.isDefined) {
+        @defining(job.extras.get.employer.map(_.extra.area).getOrElse("")) {area =>
+    <input type="text" name="location" placeholder="Location" value="@{job.extras.map(e => e.location.map(_.name).getOrElse(area)).getOrElse("")}" />
+        }
+    } else {
+    <input type="text" name="location" placeholder="Location" value="@{job.extras.map(e => e.location.map(_.name).getOrElse("")).getOrElse("")}" />
+    }
+    </div>
+    <div class="field">
+        <label>Tags</label>
+        <div class="ui fluid clearable multiple search selection dropdown tags">
+            <input id="tags" name="tags" type="hidden" value="@{job.tags.getOrElse(List.empty).mkString(",")}">
+            <i class="dropdown icon"></i>
+            <div class="default text">Set one or more tags</div>
+            <div class="menu">
+            </div>
+        </div>
+    </div>
+    <h4 class="ui dividing header">Job Information</h4>
+    <div class="field">
+        <label>Job Type</label>
+        <div class="ui selection dropdown">
+            <input type="hidden" name="jobType" value="@{job.jobType.getOrElse("")}">
+            <div class="default text">Type</div>
+            <i class="dropdown icon"></i>
+            <div class="menu">
+                <div class="item" data-value="Apprenticeship">
+                    Apprenticeship
+                </div>
+                <div class="item" data-value="Contractual">
+                    Contractual
+                </div>
+                <div class="item" data-value="Permanent">
+                    Permanent
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="fields">
+        <label>Selection Process</label>
+        <div class="inline field">
+            <div class="ui toggle checkbox">
+                <input type="checkbox" name="processType" @if(job.processType.getOrElse("").equalsIgnoreCase("Walk-in")) {checked="checked"} else {}/>
+                <label>Walk-in</label>
+            </div>
+        </div>
+    </div>
+    <h4 class="ui dividing header">Status Check</h4>
+    <div class="field">
+        <label>Status:</label>
+        <div class="ui fluid search selection dropdown">
+            <input type="hidden" name="status" value="@{job.status}"/>
+            <i class="dropdown icon"></i>
+            <div class="default text">Latest status</div>
+            <div class="menu">
+                <div class="item" data-value="Pending" data-text="Pending">
+                    Pending - Without processing and validation
+                </div>
+                <div class="item" data-value="Validated" data-text="Validated">
+                    Validated - Basic fields are verified
+                </div>
+                <div class="item" data-value="Live" data-text="Live">
+                    Live - Show on the portal
+                </div>
+                <div class="item" data-value="Processing" data-text="Processing">
+                    Processing - Submit for parsing and re-checking
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="ui segment">
+        <div class="field">
+            <div class="ui toggle checkbox">
+                @if(job.fetchStatus.getOrElse("").equalsIgnoreCase("active")) {
+                <input type="checkbox" name="active" checked="checked" />
+                <label>Disable this Job post</label>
+                } else {
+                <input type="checkbox" name="active" />
+                <label>Enable this Job post</label>
+                }
+            </div>
+        </div>
+    </div>
+    <input type="hidden" name="_key"  value="@uid"/>
+    @job.sourceId.map{srcid =>
+    <input type="hidden" name="sourceId"  value="@srcid"/>
+    }
+    <div class="ui button" tabindex="0" onclick="save_job('@uid','save');">Submit Job Post</div>
+    <div class="ui error message"></div>
+</form>
+
+<script type="text/javascript">
+
+function padToInt(value) {
+    if (value != null) {
+        value = value + '';
+        value = value.padStart(2, '0');
+    }
+    return value;
+}
+
+
+$(document).ready(function() {
+$('.ui.dropdown').dropdown({ fullTextSearch: true });
+});
+@***
+$(document).ready(function() {
+    $('#select_@uid').dropdown({
+        apiSettings: {
+            url: 'get matching employers',
+            cache: false,
+        onResponse: function(response){
+        console.log('here is the response');
+        console.log(response);
+      },
+      saveRemoteData: false,
+      //fullTextSearch: 'exact',
+      //direction: 'auto',
+      debug: true,
+      performance: false
+        },
+    });
+});
+***@
+$('#rangestart_@uid').calendar({
+  type: 'date',
+  endCalendar: $('#rangeend_@uid'),
+  formatter: {
+      date: function (date, settings) {
+        if (!date) return '';
+        var day = date.getDate();
+        var month = date.getMonth() + 1;
+        var year = date.getFullYear();
+        return year + '-' + padToInt(month) + '-' + padToInt(day);
+      }
+    }
+});
+$('#rangeend_@uid').calendar({
+  type: 'date',
+  startCalendar: $('#rangestart_@uid'),
+  formatter: {
+      date: function (date, settings) {
+        if (!date) return '';
+        var day = date.getDate();
+        var month = date.getMonth() + 1;
+        var year = date.getFullYear();
+        return year + '-' + padToInt(month) + '-' + padToInt(day);
+      }
+    }
+});
+$('#examdate_@uid').calendar({
+  type: 'date',
+  formatter: {
+      date: function (date, settings) {
+        if (!date) return '';
+        var day = date.getDate();
+        var month = date.getMonth() + 1;
+        var year = date.getFullYear();
+        return year + '-' + padToInt(month) + '-' + padToInt(day);
+      }
+    }
+});
+
+$('#pdf_@uid')
+  .on('click', function() {
+    var id = $(this).attr("id").split("pdf_")[1];
+    showMessageToaster('Success', 'Starting to fetch the document. Please wait..');
+    downloadJobPdf(id);
+});
+
+$('#original_pdf_@uid')
+  .on('click', function() {
+    var id = $(this).attr("id").split("original_pdf_")[1];
+    showMessageToaster('Success', 'Starting to fetch the document. Please wait..');
+    downloadJobPdf(id);
+});
+
+$('#clean_@uid')
+  .on('click', function() {
+    //console.log($(this).attr("id"));
+    var id = $(this).attr("id").split("clean_")[1];
+    //console.log("ID: " + id);
+    $("#company_" + id).val("");
+    $("#select_" + id).dropdown('clear');
+    //$('#select_' + id).dropdown({ "clearable": true });
+  });
+
+$('.ui.form')
+  .form({
+    fields: {
+      educations: {
+        identifier: 'educations',
+        rules: [
+          {
+            type: 'empty',
+            prompt: 'You must provide at least one matching value'
+          }
+        ]
+      },
+      company: {
+        identifier: 'company',
+        rules: [
+          {
+            type: 'empty',
+            prompt: 'You must provide the employer information'
+          }
+        ]
+      },
+      endDate: {
+        identifier: 'endDate',
+        rules: [
+          {
+            type: 'empty',
+            prompt: 'You must provide last date of application'
+          }
+        ]
+      },
+      title: {
+        identifier: 'title',
+        rules: [
+          {
+            type: 'empty',
+            prompt: 'You must provide post title'
+          }
+        ]
+      }
+    }
+  });
+
+function save_job(id, action) {
+var url = 'save job';
+var method = "POST";
+if (action == "Delete") {
+  url = 'delete job';
+  method = "DELETE";
+}
+$('#form_' + id)
+  .api({
+    action: url,
+    on: 'now',
+    serializeForm: true,
+    method : method,
+    contentType: "application/json",
+    dataType: "json",
+    urlData: {
+        id: id,
+        action: action
+    },
+    beforeSend: function(settings) {
+      console.log(settings.data);
+      if ($('form').form('is valid') ) {
+      settings.data.educations = settings.data.educations.split(",");
+      if (settings.data.tags.length <= 0) {
+            settings.data.tags = [];
+      } else {
+      settings.data.tags = settings.data.tags.split(",");
+       }
+      if (settings.data.startDate.length <= 0) {
+            settings.data.startDate = null;
+      }
+      if (settings.data.examDate.length <= 0) {
+            settings.data.examDate = null;
+      }
+      if ((settings.data.processType != null) && (settings.data.processType)) {
+            settings.data.processType = "Walk-in";
+      } else {
+            settings.data.processType = null;
+      }
+      if (settings.data.active != null) {
+      } else {
+            settings.data.active = false;
+      }
+      settings.data = JSON.stringify(settings.data);
+      console.log(settings.data);
+      return settings;
+      } else {
+        showErrorToaster('Validation Error', 'Please check the parameters before submit.');
+        return false;
+      }
+    },
+    beforeXHR: function(xhr) {
+      return xhr;
+    },
+    successTest: function(response) {
+      console.log('response: ' + response);
+      return response.status == true || false;
+    },
+    onSuccess: function(response) {
+      // valid response and response.success = true
+      showMessageToaster('Success', response.message);
+      if (action == "Delete") {
+        $("#job_form_" + id).hide();
+      }
+    },
+    onFailure: function(response) {
+        showErrorToaster('Application Error', response.message);
+      // request failed, or valid response but response.success = false
+    },
+    onError: function(errorMessage) {
+      showErrorToaster('Application Error', errorMessage);
+      // invalid response
+    },
+    onAbort: function(errorMessage) {
+      showErrorToaster('User Error', errorMessage);
+      // navigated to a new page, CORS issue, or user canceled request
+    }
+  });
+  }
+</script>
+}
+

@@ -1,0 +1,115 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+GET        /                             controllers.HomeController.index
+GET        /app                             controllers.HomeController.app
+GET        /about-us                             controllers.HomeController.aboutUs
+GET        /privacy                             controllers.HomeController.privacy
+GET        /ws                           controllers.HomeController.ws
+GET     /login                      controllers.HomeController.login(username, password)
++nocsrf
+POST     /api/v1/login                      controllers.HomeController.doLogin
++nocsrf
+POST    /api/v1/signup                    controllers.HomeController.signup
+GET     /logout                     controllers.HomeController.logout
++nocsrf
+POST    /api/v1/profile/view                controllers.HomeController.getUserProfile
++nocsrf
+POST    /api/v1/profile/update                controllers.HomeController.updateUserProfile
++nocsrf
+POST    /api/v1/logout                controllers.HomeController.doLogout
+
+GET        /backoffice/testing                             controllers.BackofficeController.testing
++nocsrf
+POST /backoffice/ads/status/:id/:status                             controllers.BackofficeController.updateAdsStatus(id: String, status: String)
++nocsrf
+POST /backoffice/ads/process/:id                             controllers.BackofficeController.processAds(id: String)
++nocsrf
+POST /backoffice/job/file/download                             controllers.BackofficeController.downloadJobFile
++nocsrf
+POST /backoffice/ads                           controllers.BackofficeController.processAllAds
++nocsrf
+DELETE        /backoffice/ads/:id                             controllers.BackofficeController.deleteAds(id: String)
+GET          /backoffice/ads/:id                             controllers.BackofficeController.adsById(id: String)
+
+GET          /backoffice/async/test                             controllers.BackofficeController.testAsync
+
+GET        /backoffice/indexes/:indexName                             controllers.BackofficeController.performIndexing(indexName: String)
+GET        /backoffice/data/load                             controllers.BackofficeController.parseAndLoadFromCache
+GET        /backoffice/process/sites                             controllers.BackofficeController.processSiteCrawlerAsAds
+GET        /data/load/education/skills                             controllers.BackofficeController.loadEducationAndSkills
+GET        /data/load/matching/rules                             controllers.BackofficeController.loadMatchingRules
+GET        /document/excel/load                             controllers.BackofficeController.loadAndParseExcel
+GET        /backoffice/search/:index                             controllers.BackofficeController.search(index: String)
+GET        /backoffice/ads                             controllers.BackofficeController.ads
+GET        /backoffice/jobs                             controllers.BackofficeController.jobs
++nocsrf
+DELETE       /backoffice/jobs/:id                             controllers.BackofficeController.deleteJobs(id: String)
++nocsrf
+POST        /backoffice/jobs                             controllers.BackofficeController.saveJobs
++nocsrf
+DELETE        /backoffice/rules/:id                             controllers.BackofficeController.deleteRule(id: String)
++nocsrf
+POST        /backoffice/sites/crawler                             controllers.BackofficeController.saveSiteCrawler
+GET        /backoffice/rules                             controllers.BackofficeController.matchingRules
++nocsrf
+POST        /backoffice/rules                             controllers.BackofficeController.saveMatchingRule
++nocsrf
+DELETE        /backoffice/skills/:id                             controllers.BackofficeController.deleteSkills(id: String)
+GET        /backoffice/skills                             controllers.BackofficeController.educationSkills
++nocsrf
+POST        /backoffice/skills                             controllers.BackofficeController.saveEducationSkills
+
++nocsrf
+DELETE        /backoffice/fetch/jobs/:id                             controllers.BackofficeController.deleteSiteCrawler(id: String)
+GET        /backoffice/fetch/jobs                             controllers.BackofficeController.showCallApi
++nocsrf
+POST        /backoffice/fetch/jobs                             controllers.BackofficeController.callApiForFetch
+
++nocsrf
+DELETE        /backoffice/pages/:id                             controllers.BackofficeController.deletePage(id: String)
+GET        /backoffice/pages/:id                             controllers.BackofficeController.showPage(id: String)
++nocsrf
+POST        /backoffice/pages                             controllers.BackofficeController.savePage
+
++nocsrf
+GET        /backoffice/employers/:query                             controllers.BackofficeController.getEmployersByQuery(query: String)
+GET        /backoffice/employers                             controllers.BackofficeController.employers
++nocsrf
+POST        /backoffice/employers                             controllers.BackofficeController.saveEmployers
++nocsrf
+DELETE        /backoffice/employers/:id                             controllers.BackofficeController.deleteEmployer(id: String)
+GET          /backoffice                             controllers.BackofficeController.index
+
+#GET        /jobsx/:condition/:prefix/:title/:suffix                             controllers.JobController.jobsByPageCondition(condition: String, prefix: String, title: String, suffix: String)
+
++nocsrf
+POST        /bookmark/job                             controllers.JobController.bookmarkJob
++nocsrf
+POST        /api/v1/user/preference                             controllers.JobController.saveUserPreference
+GET        /search                                              controllers.JobController.search()
+GET        /jobs/home                             controllers.JobController.index
+GET        /jobs/:key                             controllers.JobController.jobById(key: String)
+GET        /state-government-jobs/:query                      controllers.JobController.jobsByState(query: String)
+GET        /education-skills-jobs/:education/:query                      controllers.JobController.jobsByEducation(education: String, query: String)
+GET        /jobs                             controllers.JobController.jobs
+GET        /api/v1/jobs                             controllers.JobController.getJobsApi
++nocsrf
+POST     /api/v1/user/job/like                      controllers.JobController.saveLikedJob
+POST        /jobs                             controllers.JobController.save
+GET        /document/parse                             controllers.JobController.parseDocument
+GET        /data/load                             controllers.JobController.parseAndLoadFromCache
+
+
+GET        /pages                              controllers.SiteAndPageController.index
++nocsrf
+POST        /pages                             controllers.SiteAndPageController.save
+
+GET         /backoffice/files/:tag/:id/*name            controllers.SiteAndPageController.getFileByTagAndId(tag:String, id:String, name:String)
+
+# prefix must match `play.assets.urlPrefix`
+GET        /assets/*file                 controllers.Assets.at(file)
+GET        /versionedAssets/*file        controllers.Assets.versioned(file)
+
+->         /webjars                      webjars.Routes

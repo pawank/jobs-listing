@@ -1,0 +1,236 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil, topNavigation: views.html.backoffice.top_navigation,
+  modalView: views.html.modal, deleteModalView: views.html.components.deleteConfirmModal, selectView: views.html.components.selectDropdown)
+@(page: shared.SitePage, assets: AssetsFinder, sitepage:shared.SitePage, records: Seq[shared.SitePage], conditions: Seq[shared.PageCondition])(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang)
+
+@mainTemplate(page, assets) {
+@topNavigation(page, assets, "", false)
+@deleteModalView(assets, "", "", None, modalClass = ".rule.delete")
+<div class="ui grid">
+  <div class="two wide column"></div>
+  <div class="twelve wide column">
+    <br/>
+    <br/>
+    <span id="error_message" style="color: red;display:none;"></span>
+    <br/>
+<form class="matchingrule ui form">
+  <h4 class="ui dividing header">Page Detail for @{sitepage.title}</h4>
+  <input type="hidden" name="rule_id" id="rule_id" value="">
+  <input type="hidden" name="id" id="id" value="">
+  <div class="field">
+    <label>Source:</label>
+    <select name="condition" id="condition">
+      <option value="">---</option>
+      @for(v <- conditions) {
+      <option value="@{v.value}" @if(v.value.equalsIgnoreCase(sitepage.condition)) {selected="selected"}>@{v.name.toUpperCase}</option>
+      }
+    </select>
+  </div>
+  <div class="field" style="display:block;">
+    <label>Page Title:</label>
+    <input name="title" id="title" type="text" value="@{sitepage.title}" placeholder="Meaningful title or name"/>
+  </div>
+  <div class="field">
+    <label>URL:</label>
+    /<input name="url" id="url" type="text" value="@{sitepage.url.getOrElse("")}" placeholder=""/>
+    <help>Each URL must be max 2 level deep e.g. /states/Haryana/jobs is valid but not /states/Haryana. The 3 levels can have any combinations of tags and words.</help>
+  </div>
+  <div class="field" style="display:block;">
+    <label>Meta 1:</label>
+    <input name="seo_meta1" id="seo_meta1" type="text" value="@{sitepage.seo.meta1}" placeholder="Metatag"/>
+  </div>
+  <div class="field" style="display:block;">
+    <label>Meta 2:</label>
+    <input name="seo_meta2" id="seo_meta2" type="text" value="@{sitepage.seo.meta2}" placeholder="Metatag"/>
+  </div>
+  <div class="field" style="display:block;">
+    <label>Meta 3:</label>
+    <input name="seo_meta3" id="seo_meta3" type="text" value="@{sitepage.seo.meta3}" placeholder="Metatag"/>
+  </div>
+  <div class="field" style="display:block;">
+    <label>Meta 4:</label>
+    <input name="seo_meta4" id="seo_meta4" type="text" value="@{sitepage.seo.meta4}" placeholder="Metatag"/>
+  </div>
+  <div class="field" style="display:block;">
+    <label>Meta 5:</label>
+    <input name="seo_meta5" id="seo_meta5" type="text" value="@{sitepage.seo.meta5}" placeholder="Metatag"/>
+  </div>
+  <div class="field">
+    <label>Meta Description:</label>
+    <textarea name="description" id="description">@{sitepage.description}</textarea>
+    <help>Possible placeholders: [state], [center], [employer], [job title], [education], [location], [profession], [industry]</help>
+  </div>
+  <div class="field">
+    <label>Tags:</label>
+    <textarea name="tags" id="tags">@Html(sitepage.tags.mkString("<br/>"))</textarea>
+  </div>
+  <div class="field" style="display:block;">
+    <label>Meta Page Name:</label>
+    <input name="siteName" id="siteName" type="text" value="@{sitepage.siteName}" placeholder="Internal site name"/>
+  </div>
+  <input type="hidden" name="pageType" id="pageType" value="@{sitepage.pageType}">
+  <div class="ui submit button">Save</div>
+  <div class="ui error message"></div>
+</form>
+    <div class="two wide column"></div>
+  </div>
+
+<table class="ui compact celled table">
+  <thead>
+  <tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Type</th>
+    <th>URL</th>
+    <th>Source</th>
+    <th>Detail</th>
+    <th>Action</th>
+  </tr>
+  </thead>
+  <tbody>
+  @records.map {record =>
+  @defining(record._key.getOrElse("")){ path =>
+  <tr id="box_@path">
+    <td class="collapsing">
+      <a href="/backoffice/pages/@path" target="_blank">View</a>
+      @path
+      @defining(System.getenv("ARANGODB_WEB_URL")) {web =>
+      <a href="@web/_db/portal/_admin/aardvark/index.html#collection/pages/@path" target="_blank">Open in db</a>
+      }
+    </td>
+    <td>
+      @record.title
+    </td>
+      <td>
+        @record.pageType
+      </td>
+    <td>
+      @record.slug
+    </td>
+    <td>
+        @record.condition
+    </td>
+    <td>
+        @record.tags.size
+    </td>
+    <td>
+      <button class="ui danger button rule delete" onclick="deleteConfirm('@path');">Delete</button>
+    </td>
+  </tr>
+    }
+  }
+  </tbody>
+  <tfoot class="full-width">
+  </tfoot>
+</table>
+
+<script>
+  $('.combo.dropdown').dropdown({action: 'combo' });
+  $('.ui.form .ui.dropdown')
+    .dropdown({
+      allowAdditions: true
+  });
+  $('.ui.selection.dropdown')
+    .dropdown({
+      allowAdditions: true
+  });
+  $('#rules')
+    .dropdown({
+      allowAdditions: true
+  });
+  $('.ui.selection.dropdown')
+    .dropdown('restore defaults',{
+      allowAdditions: true
+  });
+
+var url = 'save pages';
+$('.form .submit')
+  .api({
+    action: url,
+    //on: 'now',
+    serializeForm: true,
+    method : 'POST',
+    contentType: "application/json",
+    dataType: "json",
+    beforeSend: function(settings) {
+      if (typeof(settings.data.tags) == 'undefined') {
+          settings.data.tags = [];
+      } else {
+          settings.data.tags = settings.data.tags.split("\n");
+      }
+      if (typeof(settings.data.seo) == 'undefined') {
+        settings.data.seo = {
+          "meta1":"",
+          "meta2":"",
+          "meta3":"",
+          "meta4":"",
+          "meta5":""
+        }
+      }
+      if (typeof(settings.data.seo_meta1) != 'undefined') {
+          settings.data.seo.meta1 = settings.data.seo_meta1;
+      }
+      if (typeof(settings.data.seo_meta2) != 'undefined') {
+          settings.data.seo.meta2 = settings.data.seo_meta2;
+      }
+      if (typeof(settings.data.seo_meta3) != 'undefined') {
+          settings.data.seo.meta3 = settings.data.seo_meta3;
+      }
+      if (typeof(settings.data.seo_meta4) != 'undefined') {
+          settings.data.seo.meta4 = settings.data.seo_meta4;
+      }
+      if (typeof(settings.data.seo_meta5) != 'undefined') {
+          settings.data.seo.meta5 = settings.data.seo_meta5;
+      }
+      if (settings.data.title.length <= 0) {
+        showErrorToaster('Application Error', 'Title cannot be empty and must be unique.');
+        return false;
+      }
+      settings.data.action = "update";
+      settings.data = JSON.stringify(settings.data);
+      console.log(settings.data);
+      return settings;
+    },
+    beforeXHR: function(xhr) {
+      return xhr;
+    },
+    successTest: function(response) {
+        console.log('response: ' + response);
+      return response.status == true || false;
+    },
+    onSuccess: function(response) {
+      // valid response and response.success = true
+      showMessageToaster('Success', response.message);
+    },
+    onFailure: function(response) {
+        showErrorToaster('Application Error', response.message);
+      // request failed, or valid response but response.success = false
+      if (tyepof(response.exception) != 'undefined') {
+      $("#error_message").html(response.message + response.exception);
+      } else {
+      $("#error_message").html(response.message);
+      }
+      $("#error_message").show();
+    },
+    onError: function(errorMessage) {
+      showErrorToaster('Application Error', errorMessage);
+      if (tyepof(response.exception) != 'undefined') {
+      $("#error_message").html(response.message + response.exception);
+      } else {
+      $("#error_message").html(response.message);
+      }
+      $("#error_message").show();
+      // invalid response
+    },
+    onAbort: function(errorMessage) {
+      showErrorToaster('User Error', errorMessage);
+      // navigated to a new page, CORS issue, or user canceled request
+    }
+  });
+
+  function deleteConfirm(id) {
+    $("#input_delete_modal").val(id);
+    $("#input_url_delete_modal").val('delete fetch jobs');
+  }
+
+</script>
+}

@@ -1,0 +1,88 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil,
+footerView: views.html.page_footer,
+topNavigation: views.html.top_navigation)
+@(page: shared.SitePage, assets: AssetsFinder)(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang)
+
+@mainTemplate(page, assets) {
+  @topNavigation(page, assets, "", false)
+
+<div class="ui large">
+<h2 class="ui center aligned header" style="margin:10px;">
+  About SarkariJobListing
+</h2>
+  <div class="ui vertical segment" style="margin:10px;">
+    <p>
+      <h3>
+    SarkariJobListing  helps you search for latest government jobs and provides free job alerts, covering:<br/>
+  </h3>
+      1. Ministries/ Departments/ Offices/ Organizations/ Autonomous bodies/ Societies/ PSUs of the Central Government, State Government and UT Administrations.<br/>
+      2. Nationalised Banks/ RRBs /UPSC/SSC/ Constitutional and Statutory bodies.<br/>
+      3. Central/State Governments Universities/ Colleges/Institutes recognised by the UGC/AICTE.<br/>
+        <br/>
+      We also cover jobs published in Rojgar Samachar aka Employment News published by Government of India and 9,000+ websites of the Government of India.
+    </p>
+  </div>
+  <div class="ui vertical segment" style="margin:10px;">
+    <p>
+      <h3>
+
+    Search Job - Using Keywords
+  </h3>
+
+      You can search for jobs by entering simple keywords(s) relating to education, government department, state name , location, pre-qualification criteria etc. Sarkari Jobs app will filter jobs, having keywords anywhere in the job notification. Examples of searches - Railway recruitment 2019, Banking Jobs 2019, UPSC, GATE, PSU Jobs 2019, Teaching Jobs etc.
+    </p>
+  </div>
+  <div class="ui vertical segment" style="margin:10px;">
+   <p>
+    <h3>
+    Search Job  - Using Filters
+    </h3>
+
+      Sarkari Jobs app offers a variety of filters to choose from, to personalize the job search. Filter the job feed, by selecting from the categories listed below.
+    <div class="ui vertical segment" style="margin-left:10px;">
+      <h4>
+        Education / Qualification / Specialisation -
+      </h4>
+      8th Pass, 10th Pass, 10+2 Pass (Intermediate), Graduate, Postgraduate, ITI / Vocational Training,Diploma,B.Sc. / M.Sc.,B.E. / B.Tech, M.E./ M.Tech/ PHD, B.Pharma/ M.Pharma, BDS (Dental), MBBS, MD / MS, Paramedical, BBA, B.Com, MBA / M.Com / PGDM,CA / ICMAI, BA, B.Ed., Law - LLB, and more
+    </div>
+    <div class="ui vertical segment" style="margin-left:10px;">
+      <h4>
+        Sectors -
+      </h4>
+      Agriculture, Aviation, Banking & Insurance, Defense, Engineering, Legal, Medical, Pharma, Police /  Paramilitary, Research, Teaching, Tourism and more.
+    </div>
+    <div class="ui vertical segment" style="margin-left:10px;">
+      <h4>
+        State / Central Government -
+      </h4>
+      State Government Jobs / PSU Jobs / Central Government Jobs
+
+      <b>States and Union Territories</b> -
+      Andaman and Nicobar Island, Madhya Pradesh MP), Andhra Pradesh (AP), Maharashtra, Arunachal Pradesh (AP), Manipur, Assam, Meghalaya, Bihar, Mizoram, Chandigarh, Nagaland, Chhattisgarh, Odisha, Dadra and Nagar Haveli, Puducherry, Daman and Diu, Punjab, Delhi, Rajasthan, Goa, Sikkim, Gujarat, Tamil Nadu (TN), Haryana, Telangana, Himachal Pradesh (HP), Tripura, Jammu and Kashmir (J&K),  Uttarakhand, Jharkhand, Uttar Pradesh (UP), Karnataka, West Bengal (WB), Kerala, Lakshadweep,
+    </div>
+
+    <div class="ui vertical segment" style="margin-left:10px;">
+        <h4>Type of employment</h4>  - Permanent Jobs, / Temporary / Contractual jobs, Apprenticeship
+
+        Category -  UR,. SC, ST, BC, EWS, Ex-Servicemen, Women, Physically Disabled
+
+        Sort by Last application date, Recent jobs and Popularity - Latest jobs, popular jobs,  and upcoming application deadlines.
+    </div>
+    </p>
+  </div>
+
+  <div class="ui vertical segment" style="margin:10px;">
+    <p>
+      <h3>Weekly Employment News (Coming Soon)</h3> -
+      We cover Rojgar Samachar / Employments News published by Government of India, and  announcements relating to vacancies / recruitment made on from 9,000+ websites of Government of India.
+    </p>
+  </div>
+    <br/>
+  <div class="ui vertical segment" style="margin:10px;">
+    <p>
+      <i>Disclaimer</i>  - Please note this app is a privately run initiative and all the information is sourced from listings at various Government of India websites and employment publications.
+    </p>
+  </div>
+</div>
+@footerView(assets, "", "")
+}

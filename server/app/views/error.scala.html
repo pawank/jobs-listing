@@ -1,0 +1,50 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil, topNavigation: views.html.top_navigation)
+@(page: shared.SitePage, assets: AssetsFinder, error: String)(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang)
+
+@mainTemplate(page, assets) {
+  @topNavigation(page, assets, "", false)
+
+<h2 class="ui center aligned icon header">
+  <i class="circular google play icon"></i>
+  Sarkari Job Listing - Error
+</h2>
+  <div class="ui vertical stripe segment">
+    <div class="ui middle aligned stackable grid container">
+      <div class="row">
+        <div class="column">
+          <h3 class="ui header">SERVER ERROR</h3>
+          <p>We are working on fixing it. If search did not work, please try changing the criteria or check valid query is provided.</p>
+          <button value="Show Complete Error" onclick="show_error('error_box');">Show Complete Error</button>
+          <div id="error_box" style="display:none;">
+            @error
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="ui inverted vertical footer segment">
+    <div class="ui container">
+      <div class="ui stackable inverted divided equal height stackable grid">
+        <div class="three wide column">
+          <h4 class="ui inverted header">About</h4>
+          <div class="ui inverted link list">
+            <a href="#" class="item">Sitemap</a>
+            <a href="#" class="item">Contact Us</a>
+          </div>
+        </div>
+        <div class="three wide column">
+        </div>
+        <div class="seven wide column">
+          <h4 class="ui inverted header">Sarkari Job</h4>
+          <p>Best platform for finding dream Sarkari Job</p>
+        </div>
+      </div>
+    </div>
+  </div>
+<script>
+  function show_error(id) {
+    $("#" + id).show();
+  }
+</script>
+}

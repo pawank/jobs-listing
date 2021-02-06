@@ -1,0 +1,369 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil, topNavigation: views.html.backoffice.top_navigation,
+  modalView: views.html.modal, deleteModalView: views.html.components.deleteConfirmModal,
+  selectView: views.html.components.selectDropdown,
+messageView: views.html.components.message,
+paginationView: views.html.components.tableFooter)
+@(page: shared.SitePage, assets: AssetsFinder, records: Seq[shared.Employer], educationAndSkills: Seq[shared.NameValue] = Seq.empty, employerID: Option[String] = None)(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang, pagination: shared.Pagination)
+
+@mainTemplate(page, assets) {
+@topNavigation(page, assets, "", false)
+@deleteModalView(assets, "", "", None, ".employer.delete")
+<div class="ui search">
+  <label>Search Employers:</label>
+  <div class="ui fluid icon input">
+    <input id="search" class="prompt" type="text" placeholder="Search by employer name, location, code, site" />
+    <i class="search icon"></i>
+  </div>
+</div>
+<div class="ui grid">
+  <div class="two wide column"></div>
+  <div class="twelve wide column">
+    <form class="employer ui form">
+      <input name="id" value="" id="id" type="hidden"/>
+      <input name="action" value="" id="action" type="hidden"/>
+      <h4 class="ui dividing header">Education and Skill Mapping</h4>
+      <div class="field">
+        <label>ID:</label>
+        <input name="emp_id" value="" id="emp_id" type="text" style="border: none;" disabled/>
+      </div>
+      <div class="field">
+        <label>Name:</label>
+        <input name="name" value="" id="name" type="text" required/>
+      </div>
+      <div class="field">
+        <label>Code:</label>
+        <input name="code" value="" id="code" type="text"/>
+      </div>
+      <div class="field">
+        <label>Department:</label>
+        <input name="department" value="" id="department" type="text"/>
+      </div>
+      <div class="field">
+        <label>State / Centre:</label>
+        <select name="stateType" id="stateType">
+          <option value="" selected="selected">---</option>
+          <option value="Center">Center</option>
+          <option value="State">State</option>
+          <option value="District">District</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>State:</label>
+          <select name="state" id="state">
+            <option value="" selected="selected">---</option>
+        @api.JobParser.STATE_NAMES.map {kv =>
+              <option value="@kv">@kv</option>
+        }
+          </select>
+      </div>
+      <div class="field">
+        <label>Industry:</label>
+        <input name="industry" value="" id="industry" type="text"/>
+        <help>Provide multiple industry values with comma separation</help>
+      </div>
+      <div class="field">
+        <label>Website:</label>
+        <input name="website" value="" id="website" type="text" required/>
+      </div>
+      <div class="field">
+        <label>URLs for fetch:</label>
+        <textarea name="links" id="links"></textarea>
+        <help>Put each URL per line</help>
+      </div>
+      <div class="ui submit button">Save</div>
+      <div class="ui error message"></div>
+    </form>
+  </div>
+  <div class="two wide column"></div>
+</div>
+@if(!records.isEmpty) {
+<h3 class="ui top attached header">
+  Showing a total of @{pagination.total} results
+</h3>
+}
+@if(records.isEmpty) {
+@messageView(assets, "No results found", "Please refine your search criteria")
+}
+
+
+<table class="ui compact celled table">
+  <thead>
+  <tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Code</th>
+    <th>State / Centre</th>
+    <th>State</th>
+    <th>Website</th>
+    <th>Links</th>
+    <th>Action</th>
+  </tr>
+  </thead>
+  <tbody>
+  @records.map {record =>
+  @defining(record._key.getOrElse("")){ path =>
+  <tr id="box_@path">
+    <td class="collapsing">
+        @path
+    </td>
+    <td>
+      <a href="@{record.website}" title="@{record.name}" target="_blank">@{record.name}</a > (@record.extra.priority)
+    </td>
+    <td>
+      @{record.code}
+    </td>
+    <td>
+      @{record.extra.stateType}
+    </td>
+    <td>
+      @{record.extra.state}
+    </td>
+    <td>
+      <a href="@record.website" title="@{record.website}" target="_blank">@{record.website}</a >
+    </td>
+    <td>
+      @defining(record.extra.links.getOrElse(List.empty).size) {count =>
+        @count
+      }
+    </td>
+    <td>
+      @defining(record.extra.links.getOrElse(List.empty).mkString("^")) {links =>
+      <button class="ui primary button update" onclick="set_values('@path','@{record.name}','@{record.code}','@{record.extra.state}','@{record.website}','@{record.extra.industry.getOrElse("")}','@{record.extra.stateType}','@{record.extra.state}','@links','Update');">Edit</button>
+      }
+      <button class="ui danger button employer delete" onclick="update_or_delete_rule('@path','@{record.name}','Delete');">Delete</button>
+    </td>
+  </tr>
+  }
+  }
+  </tbody>
+  @paginationView(assets, routes.BackofficeController.employers, pagination.page, Seq(pagination), None)
+</table>
+<script>
+  $('.combo.dropdown').dropdown({action: 'combo' });
+  $('.ui.form .ui.dropdown')
+    .dropdown({
+      allowAdditions: true
+  });
+  $('.ui.selection.dropdown')
+    .dropdown({
+      allowAdditions: true
+  });
+  $('#search').keypress(function(event){
+	var keycode = (event.keyCode ? event.keyCode : event.which);
+	if(keycode == '13'){
+		console.log('You pressed a "enter" key in textbox');
+		var search = $("#search").val();
+		var baseurl = '@{routes.BackofficeController.employers}';
+		window.location.href = baseurl + "?search=" + search;
+	}
+  });
+
+$('.ui.form')
+  .form({
+    fields: {
+      name: {
+        identifier: 'name',
+        rules: [
+          {
+            type: 'empty',
+            prompt: 'You must provide at least name'
+          }
+        ]
+      }
+    }
+  });
+
+var url = 'save employers';
+$('.form .submit')
+  .api({
+    action: url,
+    //on: 'now',
+    serializeForm: true,
+    method : 'POST',
+    contentType: "application/json",
+    dataType: "json",
+    beforeSend: function(settings) {
+      // cancel request
+      //if(!isLoggedIn) {
+        //showErrorToaster('Authentication Error', 'Please login');
+        //return false;
+      //}
+      if ($('form').form('is valid') ) {
+      var name = $("#name").val();
+      var website = $("#website").val();
+      if (name.length <= 0) {
+        showErrorToaster('Validation Error', 'Please check the name.');
+        return false;
+      }
+      if (website.length <= 0) {
+        showErrorToaster('Validation Error', 'Please check the website.');
+        return false;
+      }
+      var links = settings.data.links;
+      console.log("links = " + links);
+      if (links.indexOf("\n") >= 0) {
+        links = links.split("\n");
+      }
+      else if (links.indexOf("<br/>") >= 0) {
+        links = links.split("<br/>");
+      } else if (links == "") {
+        links = [];
+      } else {
+        links = [links];
+      }
+      console.log("final links = " + links);
+      settings.data.links = links;
+      settings.data.action = "update";
+      settings.data = JSON.stringify(settings.data);
+      console.log(settings.data);
+      return settings;
+      } else {
+        showErrorToaster('Validation Error', 'Please check the parameters before submit.');
+        return false;
+      }
+    },
+    beforeXHR: function(xhr) {
+      return xhr;
+    },
+    successTest: function(response) {
+      console.log('response: ' + response);
+      return response.status == true || false;
+    },
+    onSuccess: function(response) {
+      // valid response and response.success = true
+      showMessageToaster('Success', response.message);
+    },
+    onFailure: function(response) {
+        showErrorToaster('Application Error', response.message);
+      // request failed, or valid response but response.success = false
+      return false;
+    },
+    onError: function(errorMessage) {
+      showErrorToaster('Application Error', errorMessage);
+      // invalid response
+      return false;
+    },
+    onAbort: function(errorMessage) {
+      //showErrorToaster('User Error', errorMessage);
+      // navigated to a new page, CORS issue, or user canceled request
+      return false;
+    }
+});
+
+function set_values(id, name, code, state, website, industry, stateType, department, links, action) {
+$("#action").val(action);
+$("#id").val(id);
+$("#emp_id").val(id);
+$("#code").val(code);
+$("#name").val(name);
+if (stateType == "Centre") {
+  stateType = "Center";
+}
+$("#stateType").val(stateType);
+$("#website").val(website);
+$("#industry").val(industry);
+$("#department").val(department);
+if (state == "Centre") {
+  state = "Center";
+}
+$("#state").val(state);
+links = links.split("^");
+var urls = "";
+for(var i = 0; i < links.length; i++) {
+  urls = urls + links[i] + "\r\n";
+}
+$("#links").html(urls);
+//$("#state").dropdown('set selected', state);
+console.log("name = " + name + ", stateType = " + stateType, ", dept = " + department + ", and state = " + state + " and industry = " + industry);
+}
+  function deleteConfirm(id) {
+    $("#input_delete_modal").val(id);
+    $("#input_url_delete_modal").val('delete employers');
+  }
+
+function update_or_delete_rule(id, title, action) {
+var code = $("#code_" + id).val();
+var name = $("#name_" + id).val();
+var stateType = $("#stateType_" + id).val();
+var state = $("#state_" + id).val();
+var website = $("#website_" + id).val();
+var industry = $("#industry_" + id).val();
+var department = $("#department_" + id).val();
+var url = 'save employers';
+var method = "POST";
+if (action == "Delete") {
+  url = 'delete employers';
+  method = "DELETE";
+  return deleteConfirm(id);
+}
+console.log("Action = " + action);
+$(this)
+  .api({
+    action: url,
+    on: 'now',
+    //serializeForm: true,
+    method : method,
+    contentType: "application/json",
+    dataType: "json",
+    urlData: {
+        id: id,
+        action: action
+    },
+    data: {
+      id: id,
+      code: code,
+      name: name,
+      stateType: stateType,
+      state: state,
+      website: website,
+      industry: industry,
+      department: department,
+      action: action
+    },
+    beforeSend: function(settings) {
+      // cancel request
+      if(!isLoggedIn) {
+        //showErrorToaster('Authentication Error', 'Please login');
+        //return false;
+      }
+      settings.data = JSON.stringify(settings.data);
+      console.log(settings.data);
+      return settings;
+    },
+    beforeXHR: function(xhr) {
+      return xhr;
+    },
+    successTest: function(response) {
+        console.log('response: ' + response);
+      return response.status == true || false;
+    },
+    onSuccess: function(response) {
+      // valid response and response.success = true
+      showMessageToaster('Success', response.message);
+      if (action == "Delete") {
+        $("#box_" + id).hide();
+      }
+    },
+    onFailure: function(response) {
+        showErrorToaster('Application Error', response.message);
+      // request failed, or valid response but response.success = false
+    },
+    onError: function(errorMessage) {
+      showErrorToaster('Application Error', errorMessage);
+      // invalid response
+    },
+    onAbort: function(errorMessage) {
+      showErrorToaster('User Error', errorMessage);
+      // navigated to a new page, CORS issue, or user canceled request
+    }
+  });
+  }
+
+
+@if(employerID.isDefined && !employerID.getOrElse("").isEmpty) {
+$(document).ready(function() {
+  $(".ui.primary.button.update").trigger("click");
+});
+}
+</script>
+}

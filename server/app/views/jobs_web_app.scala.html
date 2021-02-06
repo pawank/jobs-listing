@@ -1,0 +1,14 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil, topNavigation: views.html.top_navigation)
+@(page: shared.SitePage, assets: AssetsFinder)(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang)
+
+<html>
+<head>
+    <title>Sarkari Job Listings</title>
+</head>
+<body>
+@defining(System.getenv("WEB_APP_HTTP_URL")) { baseUrl =>
+<iframe id="jobs_web_app" src="@baseUrl" height="100%" width="100%" frameborder="0" style="position: absolute; height: 100%; border: none"></iframe>
+}
+</body>
+</html>
+

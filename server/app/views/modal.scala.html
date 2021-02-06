@@ -1,0 +1,17 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil)
+@(assets: AssetsFinder, title: String, content: String, id: Option[String] = None)(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang)
+
+<div class="ui large modal" id="@{id.getOrElse("default_modal")}">
+    <i class="close icon"></i>
+    <div class="header">
+        @title
+    </div>
+    <div class="scrolling content">
+        <div class="description">
+            @Html(content)
+        </div>
+    </div>
+    <div class="actions">
+        <div class="ui button">OK</div>
+    </div>
+</div>

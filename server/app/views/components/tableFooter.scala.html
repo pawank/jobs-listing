@@ -1,0 +1,47 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil)
+@(assets: AssetsFinder, url: play.api.mvc.Call, defaultValue: Int, pages: Seq[shared.Pagination], id: Option[String] = None, query: String = "", statusQ: String = "", params: Map[String, String] = Map.empty)(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang)
+
+@defining(id.getOrElse("")){uid =>
+@pages.headOption.map { page =>
+@if(page.pageCount > 1) {
+@defining(params.get("search").getOrElse("")) { search =>
+@defining(params.get("state").getOrElse("")) { state =>
+@defining(params.get("jobStatus").getOrElse("")) { jobStatus =>
+<tfoot class="full-width" @if(!uid.isEmpty) {id="select_@{uid}"}>
+<tr><th colspan="@{page.total}">
+    <div class="ui right floated pagination menu">
+        <a class="icon item @if(page.page == defaultValue){active}" href="@{url}?query=@query&page=@{defaultValue-1}&offset=@{page.offset}&status=@statusQ&search=@search&state=@state&jobStatus=@jobStatus">
+            <i class="left chevron icon"></i>
+        </a>
+        @for(no <- (1 until (page.pageCount + 1)).toList) {
+            @defining(no.toString) {pageNo =>
+                @if(page.pageCount <= 10) {
+        <a class="item @if(no == defaultValue){active}" href="@{url}?query=@query&page=@{pageNo}&offset=@{page.offset}&status=@statusQ&search=@search&state=@state&jobStatus=@jobStatus">@{pageNo}</a>
+                } else {
+                }
+            }
+        }
+        @if(page.pageCount > 10) {
+        <input type="number" name="pageNo" value="@{page.page}" id="pageNo" onchange="goto_page('@url', @defaultValue, @{page.offset}, '@state','@jobStatus');"/>
+        }
+        <a class="icon item @if(page.page == defaultValue){active}" href="@{url}?query=@query&page=@{defaultValue+1}&offset=@{page.offset}&status=@statusQ&search=@search&state=@state&jobStatus=@jobStatus">
+            <i class="right chevron icon"></i>
+        </a>
+    </div>
+</th>
+</tr>
+</tfoot>
+<script type="text/javascript">
+  function goto_page(url, page, offset, state, jobStatus) {
+    var query = '@query';
+    var pageNo = $("#pageNo").val();
+    var search = '@search';
+    location.href = url + "?query=" + query + "&page=" + pageNo + "&offset=" + offset + "&search=" + search + "&state=" + state + "&jobStatus=" + jobStatus;
+  }
+</script>
+}
+}
+}
+}
+}
+}

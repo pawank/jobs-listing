@@ -1,0 +1,94 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil)
+@(assets: AssetsFinder, jobsByCategory: String, jobsByCategoryValue: String, sectionNo: Int = 1)(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang)
+
+@defining(java.time.LocalDate.now().getYear){year =>
+<div class="ui large">
+    @if(sectionNo == 1) {
+    <div class="ui piled segment">
+        <h4 class="ui header">
+            Looking for jobs / open vacancies with @jobsByCategoryValue State government.
+        </h4>
+        @if(jobsByCategory.equals("state")) {
+        <p>
+    We have compiled all live government job notifications published in Rojgar Samachar aka Employment News published by Government of India and 9,000+ websites of Government of India.
+        </p>
+        }
+        @if(jobsByCategory.contains("education")) {
+        <p>
+            Looking for jobs / open vacancies for @jobsByCategoryValue with State Government / Central Government / PSU. We have compiled all live government job notifications for @jobsByCategoryValue published in Rojgar Samachar aka Employment News published by Government of India and 9,000+ websites of Government of India.
+        </p>
+        }
+    </div>
+}
+
+    @if(sectionNo == 2) {
+    <div class="ui vertical segment" style="margin: 20px;">
+        <h4 class="ui header">
+            @if(jobsByCategory.equals("state")) {
+            Why Sarkari Job Listing for jobs with @jobsByCategoryValue government?
+            }
+            @if(jobsByCategory.contains("education")) {
+            Why Sarkari Job Listing for @jobsByCategoryValue jobs with government of India?
+            }
+        </h4>
+    <p>
+        SarkariJobListing helps you search for latest government jobs and provides free job alerts, covering: <br/>
+        <ul>
+        <li>
+            1. Ministries/ Departments/ Offices/ Organizations/ Autonomous bodies/ Societies/ PSUs of the Central Government, State Government and UT Administrations;
+        </li>
+        <li>
+            2. Nationalised Banks/ RRBs /UPSC / SSC/ Constitutional and Statutory bodies
+        </li>
+        <li>
+            3. Central/State Governments Universities/ Colleges/Institutes recognised by the UGC / AICTE.
+        </li>
+    </ul>
+    </p>
+    </div>
+
+
+    <div class="ui vertical segment" style="margin: 20px;">
+        <h4 class="ui header">
+            Search Job with @jobsByCategoryValue Government- Using Keywords
+        </h4>
+    <p>
+    You can search for jobs by entering simple keyword(s) relating to education, government department, location, pre-qualification criteria etc. Sarkari Jobs app will filter jobs, having keywords anywhere in the job notification. Examples of searches - 10th pass jobs in @jobsByCategoryValue government, Banking Jobs in @jobsByCategoryValue @year, @jobsByCategoryValue state selection commission, Teaching Jobs with @jobsByCategoryValue government in [Current year]etc.
+    </p>
+        @if(jobsByCategory.contains("education")) {
+        <p>
+        <h4 class="ui header">
+            Search Job for @jobsByCategoryValue by state - 
+    </h4>
+            Andaman and Nicobar Island, Madhya Pradesh (MP), Andhra Pradesh (AP), Maharashtra, Arunachal Pradesh (AP), Manipur, Assam, Meghalaya, Bihar, Mizoram, Chandigarh, Nagaland, Chhattisgarh, Odisha, Dadra and Nagar Haveli, Puducherry, Daman and Diu, Punjab, Delhi, Rajasthan, Goa, Sikkim, Gujarat, Tamil Nadu (TN), Haryana, Telangana, Himachal Pradesh (HP), Tripura, Jammu and Kashmir (J&K),  Uttarakhand, Jharkhand, Uttar Pradesh (UP), Karnataka, West Bengal (WB), Kerala, Lakshadweep.
+        </p>
+        }
+    <p>
+        <h4 class="ui header">
+    Search Job with @jobsByCategoryValue Government by  Education / Qualification / Specialisation - 
+    </h4>
+    8th Pass, ,10th Pass ,10+2 Pass (Intermediate), Graduate, Postgraduate, ITI / Vocational Training,Diploma,B.Sc. / M.Sc.,B.E. / B.Tech, M.E./ M.Tech/ PHD, B.Pharma/ M.Pharma, BDS (Dental), MBBS, MD / MS, Paramedical, BBA, B.Com, MBA / M.Com / PGDM,CA / ICMAI, BA, B.Ed., Law - LLB, and more
+    </p>
+        <p>
+        <h4 class="ui header">
+    Search Job with @jobsByCategoryValue Government across sectors -
+    </h4>
+
+    Agriculture / Agri , Aviation, Banking & Insurance, Defense, Engineering, Legal, Medical, Pharma, Police /  Paramilitary, Research, Teaching, Tourism and more.
+        </p>
+    <p>
+    Search Job with @jobsByCategoryValue Government by type of employment  - Permanent Jobs, / Temporary / Contractual jobs, Apprenticeship
+    </p>
+    </div>
+
+    <div class="ui vertical segment" style="margin: 20px;">
+        <p>
+            <b>Weekly Employment News (Coming Up Soon..)</b> - We cover Rojgar Samachar / Employments News published by Government of India, and  announcements relating to vacancies / recruitment made on from 9,000+ websites of Government of India. 
+        </p>
+    </div>
+    <div class="ui vertical segment" style="margin: 20px;">
+        <i>Disclaimer:</i> Please note this platform is privately run initiative and all the information is sourced from listings at various Government of India websites and employment publications.
+    </div>
+    }
+</div>
+}

@@ -1,0 +1,139 @@
+@this(mainTemplate: views.html.base,
+topNavigation: views.html.top_navigation,
+    messageView: views.html.components.message,
+    webJarsUtil: org.webjars.play.WebJarsUtil)
+@(page: shared.SitePage, assets: AssetsFinder, maybeJob: Option[shared.Job], educationsSkills: Seq[shared.DropdownValue])(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang)
+@mainTemplate(page, assets) {
+@topNavigation(page, assets, "", false)
+@if(!maybeJob.isDefined) {
+@messageView(assets, "No results found", "Please refine your search criteria")
+}
+
+@maybeJob.map { job =>
+@job._key.map { uid =>
+@defining(job.sourceId.getOrElse("")){ path =>
+@job.extras.map { extra =>
+@defining(job.publicUrl.getOrElse("").replaceAll("""http://""","""https://""")) {s3url =>
+@extra.employer.map { emp =>
+<table class="ui compact celled definition table" xmlns="">
+    <thead class="full-width">
+    <tr>
+        <th></th>
+        <th>Information</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td class="collapsing">
+            Post Title
+        </td>
+        <td>
+		@if(s3url.isEmpty) {
+            <a href="@s3url" title="@{job.title}" target="_blank">@{job.title}</a >
+	    }else {
+            <a href="@routes.SiteAndPageController.getFileByTagAndId("ads", path, job.title)" title="@{job.title}" target="_blank">@{job.title}</a >
+	    }
+        </td>
+
+    </tr>
+    <tr>
+        <td class="collapsing">
+            Employer
+        </td>
+        <td>
+            <a target="_blank" href="@{emp.website}">@job.company</a>
+        </td>
+    </tr>
+    <tr>
+        <td class="collapsing">
+            Job Type
+        </td>
+        <td>@job.jobType.getOrElse(" - ")</td>
+    </tr>
+    <tr>
+        <td class="collapsing">
+            Selection Process
+        </td>
+        <td>@job.processType.getOrElse("")</td>
+    </tr>
+    <tr>
+        <td class="collapsing">
+            Location
+        </td>
+        <td>@job.state.getOrElse(emp.extra.state)</td>
+    </tr>
+    <tr>
+        <td class="collapsing">
+            Education / Skills
+        </td>
+        <td>
+            @job.educations.map { edu =>
+                <a class="ui tag label">@edu</a>
+            }
+        </td>
+    </tr>
+    <tr>
+        <td class="collapsing">
+            Date Added
+        </td>
+        <td>@{job.startDate.map(app.utils.Utils.asDisplayDate(_)).getOrElse("")}</td>
+    </tr>
+    <tr>
+        <td class="collapsing">
+            Last Date to Apply
+        </td>
+        <td>@{job.endDate.map(app.utils.Utils.asDisplayDate(_)).getOrElse("")}</td>
+    </tr>
+    </tbody>
+    <tfoot class="full-width">
+    <tr>
+        <th></th>
+        <th>
+        </th>
+    </tr>
+    </tfoot>
+</table>
+
+<h3 class="ui top attached header">
+    Showing original notification below
+</h3>
+	    @defining(job.extras.map(_.originalPdf)) {originalPdf =>
+	    View here the <a href="@originalPdf" title="@{job.title}" target="_blank">(Original Notification)</a ><br/>
+	    }
+<div id="embed_job">
+    @defining(System.getenv("APP_FETCH_DIRECT_SOURCE_URL") != null && System.getenv("APP_FETCH_DIRECT_SOURCE_URL").toBoolean) { APP_FETCH_DIRECT_SOURCE_URL =>
+        @defining(routes.SiteAndPageController.getFileByTagAndId("ads", path, job.title)) {pdflink =>
+            @if(APP_FETCH_DIRECT_SOURCE_URL) {
+                @defining(job.extras.map(_.originalPdf)) {originalPdf =>
+		@if(s3url.isEmpty) {
+                <embed src="@originalPdf" width="100%" height="900px;" />
+			} else {
+                <embed src="@s3url" width="100%" height="900px;" />
+			}
+                }
+            } else {
+		@if(s3url.isEmpty) {
+                <embed src="@pdflink" width="100%" height="900px;" />
+			}else{
+                <embed src="@s3url" width="100%" height="900px;" />
+			}
+            }
+        }
+    }
+</div>
+<script>
+
+  function bookmarkJob(id) {
+    var bookmarkCount = 1;
+    updateJob(id, bookmarkCount);
+  }
+
+</script>
+}
+}
+}
+}
+}
+}
+}
+

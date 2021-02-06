@@ -1,0 +1,57 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil, topNavigation: views.html.top_navigation)
+@(page: shared.SitePage, assets: AssetsFinder)(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang)
+
+@mainTemplate(page, assets) {
+  @topNavigation(page, assets, "", false)
+
+<h2 class="ui center aligned icon header">
+  <i class="circular google play icon"></i>
+  Sarkari Job Login
+</h2>
+
+  <div class="ui vertical stripe segment">
+    <div class="ui middle aligned stackable grid container">
+      <div class="row">
+        <div class="eight wide column">
+          <h3 class="ui header">We Help You Find Better Jobs</h3>
+          <p>Search and find your dream job</p>
+          <h3 class="ui header">We Make Stuff That Just Works</h3>
+          <p>Watch out videos and blog for making finding jobs easier</p>
+        </div>
+        <div class="six wide right floated column">
+          <img src="@assets.path("images/wireframe/white-image.png")" class="ui large bordered rounded image">
+        </div>
+      </div>
+      <div class="row">
+        <div class="center aligned column">
+          <a class="ui huge button">Download App</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="ui inverted vertical footer segment">
+    <div class="ui container">
+      <div class="ui stackable inverted divided equal height stackable grid">
+        <div class="three wide column">
+          <h4 class="ui inverted header">About</h4>
+          <div class="ui inverted link list">
+            <a href="#" class="item">Sitemap</a>
+            <a href="#" class="item">Contact Us</a>
+          </div>
+        </div>
+        <div class="three wide column">
+          <h4 class="ui inverted header">Services</h4>
+          <div class="ui inverted link list">
+            <a href="#" class="item">Hiring</a>
+            <a href="#" class="item">ATS</a>
+          </div>
+        </div>
+        <div class="seven wide column">
+          <h4 class="ui inverted header">Sarkari Job</h4>
+          <p>Best platform for finding dream Sarkari Job</p>
+        </div>
+      </div>
+    </div>
+  </div>
+}

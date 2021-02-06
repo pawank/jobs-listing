@@ -1,0 +1,166 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil,
+topNavigation: views.html.top_navigation,
+  modalView: views.html.modal,
+footerView: views.html.page_footer,
+categoryPageView: views.html.category_page,
+deleteModalView: views.html.components.deleteConfirmModal,
+  selectView: views.html.components.selectDropdown,
+  messageView: views.html.components.message,
+jobView: views.html.job,
+  paginationView: views.html.components.tableFooter)
+@(page: shared.SitePage, assets: AssetsFinder, records: Seq[shared.JobSummary], educationsSkills: Seq[shared.DropdownValue], query: String, jobsByCategory: String = "", jobsByCategoryValue: String = "")(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang,pagination: shared.Pagination)
+
+@mainTemplate(page, assets) {
+@topNavigation(page, assets, query, false)
+@if(!jobsByCategory.isEmpty) {
+@categoryPageView(assets, jobsByCategory, jobsByCategoryValue, 1)
+}
+@if(!records.isEmpty) {
+<h3 class="ui top attached header">
+    @{pagination.displayMessage}
+</h3>
+}
+@if(records.isEmpty) {
+  @messageView(assets, "No results found", "Please refine your search criteria")
+}
+
+
+@if(!records.isEmpty) {
+<table class="ui compact celled table">
+  <thead>
+  <tr>
+    @***
+    <th colspan="1">Bookmark</th>
+    ***@
+    <th colspan="2">Title</th>
+    <th colspan="1">Posts</th>
+    <th colspan="2">Employer</th>
+    <th colspan="3">Education</th>
+    <th colspan="1">State / Centre</th>
+    <th colspan="1">Job Type</th>
+    <th colspan="1" class="single line">Selection Process</th>
+    <th colspan="1" class="single line">Last Date</th>
+    <th colspan="1">Action</th>
+  </tr>
+  </thead>
+  <tbody>
+  @records.map {record =>
+  @defining(record.title) { name =>
+  @record._key.map{ uid =>
+  @defining(record.sourceId.getOrElse("")){ path =>
+  @defining(record.status){ status =>
+  @defining(record.stats.getOrElse(shared.JobStats())) { stats =>
+  <tr id="box_@path">
+    @***
+    <td colspan="1">
+      <div class="ui labeled button" tabindex="0">
+        <div class="ui @if((stats.clickCount > 0) || (stats.viewCount > 0)){red} button" onclick="bookmarkJob('@uid');" id="bookmark_@uid">
+          <i class="heart icon"></i>
+        </div>
+      </div>
+    </td>
+    ***@
+    <td colspan="2">
+      @***
+      <a href="@routes.SiteAndPageController.getFileByTagAndId("ads", path, name)" title="@name" target="_blank">@{record.title}</a >
+      ***@
+      @defining(routes.JobController.jobById(uid)) { url =>
+      <a href="@url" title="@name" target="_blank">@{record.title}</a >
+      }
+    </td>
+    <td colspan="1">@{record.getNoPosts()}</td>
+    <td colspan="2">@record.company</td>
+    <td colspan="3">
+      @for(skill <- record.educations) {
+      @defining(record.educationTags.getOrElse(Seq.empty)){ tags =>
+      @if(tags.isEmpty) {
+      <a href="/jobs?query=&quot;@{skill}&quot;">@Html(skill)</a>,
+      } else {
+      @defining(tags.map(s => s"&quot;$s&quot;").mkString(" OR ")) {edu =>
+      <a href="/jobs?query=(&quot;@{skill}&quot; OR @{Html(edu)})">@Html(skill)</a>,
+      }
+      }
+      }
+      }
+    </td>
+    <td colspan="1">@record.state</td>
+    <td colspan="1">@record.jobType.getOrElse(" - ")</td>
+    <td colspan="1" class="single line">@record.processType.getOrElse(" - ")</td>
+    <td colspan="1" class="single line">@record.endDate</td>
+    <td colspan="1">
+        @defining(routes.JobController.jobById(uid)) { url =>
+      <button class="ui right labeled icon button" onclick="showContent('@url');">
+        <i class="right arrow icon"></i>
+        Detail
+      </button>
+        }
+    </td>
+  </tr>
+  }
+          }
+        }
+        }
+    }
+  }
+  </tbody>
+  @if(jobsByCategory.isEmpty) {
+  @paginationView(assets, routes.JobController.jobs, pagination.page, Seq(pagination), None, query)
+  }else {
+    @if(jobsByCategory.equals("state")) {
+      @paginationView(assets, routes.JobController.jobsByState(query), pagination.page, Seq(pagination), None, query)
+    }
+  @if(jobsByCategory.equals("education")) {
+  @paginationView(assets, routes.JobController.jobsByEducation("education",query), pagination.page, Seq(pagination), None, query)
+  }
+  }
+</table>
+}
+
+@if(!jobsByCategory.isEmpty) {
+  @categoryPageView(assets, jobsByCategory, jobsByCategoryValue, 2)
+}
+
+<script>
+  $('.combo.dropdown').dropdown({action: 'combo' });
+
+  $('#search').keypress(function(event){
+	var keycode = (event.keyCode ? event.keyCode : event.which);
+	if(keycode == '13'){
+		console.log('You pressed a "enter" key in textbox');
+		var search = $("#search").val();
+    if (search.indexOf("&") >= 0) {
+      if (search.indexOf('"') >= 0) {
+        var tokens = search.split("&");
+        search = tokens[0] + " " + tokens[1];
+      }
+    }
+    console.log('Home ENTER final search = ' + search);
+		var baseurl = '@{routes.BackofficeController.jobs}';
+		window.location.href = baseurl + "?search=" + search;
+	}
+  });
+
+  function showContent(url) {
+		window.location.href = url;
+  }
+
+  function deleteConfirm(id) {
+    $("#input_delete_modal").val(id);
+    $("#input_url_delete_modal").val('delete job');
+  }
+
+  function bookmarkJob(id) {
+    var bookmarkCount = 1;
+    updateJob(id, bookmarkCount);
+  }
+
+  function closeForm(uid) {
+    $("#job_form_" + uid).hide();
+  }
+  function showForm(uid) {
+    $("#job_form_" + uid).show();
+  }
+
+</script>
+@footerView(assets, "", "")
+}

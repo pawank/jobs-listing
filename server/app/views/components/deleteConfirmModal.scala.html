@@ -1,0 +1,108 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil)
+@(assets: AssetsFinder, title: String, content: String, id: Option[String] = None, modalClass: String = ".job.delete")(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang)
+
+@defining(id.getOrElse("delete_modal")){uid =>
+<div class="ui basic demo modal" id="@{uid}">
+    <div class="header">
+        Do you really want to delete?
+    </div>
+    <div class="image content">
+        <div class="image">
+            <i class="archive icon"></i>
+        </div>
+        <div class="description">
+            <input id="input_@{uid}" class="type" type="hidden">
+            <input id="input_url_@{uid}" class="type" type="hidden">
+            <p>Clean up this record</p>
+        </div>
+    </div>
+    <div class="actions">
+        <div class="two fluid ui inverted buttons">
+            <div class="ui red basic cancel inverted button">
+                <i class="remove icon"></i>
+                No
+            </div>
+            <div class="ui green ok basic inverted button">
+                <i class="checkmark icon"></i>
+                Yes
+            </div>
+        </div>
+    </div>
+</div>
+}
+<script type="text/javascript">
+window.isLoggedIn = true;
+$(document).ready(function() {
+    //Make sure calling object is setting input_delete_modal
+    $('.basic.demo.modal').modal({
+    closable  : false,
+    onDeny    : function(){
+      //console.log('Wait not yet!');
+      //var id = $(this).data("data");
+      //var id = $("#input_delete_modal").val();
+      //console.log("data-id = " + id);
+      //return false;
+    },
+    onApprove : function() {
+      console.log('Approved!');
+      //var id = $(this).attr("data-id");
+      var id = $("#input_delete_modal").val();
+      var url = $("#input_url_delete_modal").val();
+      console.log("data-id = " + id + " and url = " + url);
+      try {
+            $(".cls_" + id).hide();
+            if ((id != null) && (id.indexOf(",") >= 0)) {
+                $(".selectall").hide();
+            }
+      }catch(e) {
+        console.log(e);
+      }
+      $(this)
+  .api({
+    action: url,
+    on: 'now',
+    method : 'DELETE',
+    beforeSend: function(settings) {
+      settings.urlData = {
+        id: id
+      };
+      // cancel request
+      if(!isLoggedIn) {
+        //showErrorToaster('Authentication Error', 'Please login');
+        //return false;
+      }
+      return settings;
+    },
+    beforeXHR: function(xhr) {
+      // adjust XHR with additional headers
+      xhr.setRequestHeader('x-auth-toke', id);
+      return xhr;
+    },
+    successTest: function(response) {
+        console.log('response: ' + response);
+      return response.status == true || false;
+    },
+    onSuccess: function(response) {
+      // valid response and response.success = true
+      showMessageToaster('Success', response.message);
+      $("#box_" + id).hide();
+      $("#job_form_" + id).hide();
+    },
+    onFailure: function(response) {
+        showErrorToaster('Application Error', response.message);
+      // request failed, or valid response but response.success = false
+    },
+    onError: function(errorMessage) {
+      showErrorToaster('Application Error', errorMessage);
+      // invalid response
+    },
+    onAbort: function(errorMessage) {
+      showErrorToaster('User Error', errorMessage);
+      // navigated to a new page, CORS issue, or user canceled request
+    }
+  });
+      //return false;
+    }
+  }).modal('attach events', '@modalClass');
+});
+</script>

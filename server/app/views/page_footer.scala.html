@@ -1,0 +1,24 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil)
+@(assets: AssetsFinder, jobsByCategory: String, jobsByCategoryValue: String)(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang)
+<div class="ui inverted vertical segment">
+    <div class="ui container">
+        <div class="ui stackable inverted divided equal stackable grid">
+            <div class="three wide column">
+                <a href="/about-us"><h4 class="ui inverted header">About</h4></a>
+            </div>
+            <div class="three wide column">
+                <h4 class="ui inverted header">Contact Us</h4>
+            </div>
+            <div class="four wide column">
+                <a href="/privacy"><h4 class="ui inverted header">Privacy Rules</h4></a>
+            </div>
+            <div class="three wide column">
+                <h4 class="ui inverted header">Sitemap</h4>
+            </div>
+            <div class="three wide column">
+                <h4 class="ui inverted header">@@Copyright 2020</h4>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,25 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil)
+@(assets: AssetsFinder, defaultValue: String, content: Seq[shared.SelectObject], id: Option[String] = None)(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang)
+
+@defining(id.getOrElse("")){uid =>
+<div class="ui floating dropdown labeled search icon button" @if(!uid.isEmpty) {id="select_@{uid}"}>
+    <input type="hidden" name="status" value="@defaultValue">
+    <i class="dropdown icon"></i>
+    <div class="default text">-- Select --</div>
+    <div class="menu">
+        @for(c <- content) {
+        @defining(if (c.value.equals(defaultValue)) "default" else ""){default =>
+        <div class="item @default" data-value="@{c.value}">
+            <div class="ui @{c.color} empty circular label"></div>
+            @{c.name}
+        </div>
+        }
+        }
+    </div>
+</div>
+}
+<script type="text/javascript">
+//$(document).ready(function() {
+    //$(".dropdown").dropdown();
+//});
+</script>

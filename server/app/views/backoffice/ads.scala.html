@@ -1,0 +1,144 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil, topNavigation: views.html.backoffice.top_navigation,
+  modalView: views.html.modal, deleteModalView: views.html.components.deleteConfirmModal,
+  selectView: views.html.components.selectDropdown,
+messageView: views.html.components.message,
+  paginationView: views.html.components.tableFooter)
+@(page: shared.SitePage, assets: AssetsFinder, records: Seq[shared.FullJob])(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang,pagination: shared.Pagination)
+
+@mainTemplate(page, assets) {
+@topNavigation(page, assets, "", false)
+
+@deleteModalView(assets, "", "", None)
+<div class="ui search">
+  <div class="ui fluid icon input">
+    <input id="search" class="prompt" type="text" placeholder="Job Ad search by employer name, location, education.." />
+    <i class="search icon"></i>
+  </div>
+</div>
+@if(!records.isEmpty) {
+<h3 class="ui top attached header">
+  Showing a total of @{pagination.total} results
+</h3>
+}
+@if(records.isEmpty) {
+@messageView(assets, "No results found", "Please refine your search criteria")
+}
+
+
+<table class="ui compact celled table">
+  <thead>
+  <tr>
+    <th>ID</th>
+    <th>Title</th>
+    <th>Adv No</th>
+    <th>Date</th>
+    <th>Status</th>
+    <th>Action</th>
+  </tr>
+  </thead>
+  <tbody>
+  @records.map {record =>
+  @record.content.map { content =>
+  @defining(content.name){name =>
+  @defining(record._key.getOrElse("")){ path =>
+  @defining(content.content){ data =>
+  @defining(record.status.getOrElse("")){ status =>
+  <tr id="box_@path">
+    <td class="collapsing">
+      @path
+      <a href="#" style="display:none;" id="link_@path" target="_blank"><br/>Parsed Job</a>
+      @***
+      <div class="ui fitted slider checkbox">
+        <input type="checkbox"> <label></label>
+      </div>
+      ***@
+    </td>
+    <td>
+      <a href="@routes.SiteAndPageController.getFileByTagAndId("ads", path, name)" title="@name" target="_blank">@name</a >
+      <br/>
+      @content.size.getOrElse("")
+        @***
+      <a href="@routes.SiteAndPageController.getFileByTagAndId("ads", path, utils.Utils.encodeUrl(name))" title="@name" target="_blank">@name</a >
+      <button class="ui green basic button" onclick="showContent('@path');">View</button>
+        ***@
+      <p id="original_pdf_links_@path" style="display:block;">
+        <br/>
+        Possible original links:
+        @record.googleSearchResult.map {g =>
+      <ul>
+        @for(llink <- g.value) {
+         <li><a href="@llink" target="_blank">@llink</a></li>
+          }
+    </ul>
+        }
+      </p>
+    </td>
+    <td>@record.errors.getOrElse("")</td>
+    <td>@record.dates.created</td>
+    <td>
+      @selectView(assets, record.status.getOrElse(""), controllers.HtmlUtils.statusActionsForAds, Some(path))
+    </td>
+    <td>
+      @modalView(assets, name, data, Some(path))(r, rh, messages, lang)
+      <div class="ui teal buttons">
+        <div class="ui button">Action</div>
+        <div class="ui combo top right pointing dropdown icon button">
+          <i class="dropdown icon"></i>
+          <div class="menu">
+            <div class="item" onclick="showContent('@path');"><i class="file alternate icon"></i> View</div>
+            <div class="item" onclick="performAction('@path','process ads by id');"><i class="terminal icon"></i> Parse</div>
+            <div class="item job delete" onclick="deleteConfirm('@path');"><i class="delete icon"></i> Delete</div>
+            <div class="item"><i class="hide icon"></i> Hide</div>
+            <div class="item" onclick="performUpdate('@path','update ads status');"><i class="sync icon"></i> Update</div>
+          </div>
+        </div>
+      </div>
+    </td>
+  </tr>
+          }
+        }
+      }
+    }
+    }
+  }
+  </tbody>
+  @paginationView(assets, routes.BackofficeController.ads, pagination.page, Seq(pagination), None)
+</table>
+
+<script>
+  $('.combo.dropdown').dropdown({action: 'combo' });
+
+  $('#search').keypress(function(event){
+	var keycode = (event.keyCode ? event.keyCode : event.which);
+	if(keycode == '13'){
+		console.log('You pressed a "enter" key in textbox');
+		var search = $("#search").val();
+		var baseurl = '@{routes.BackofficeController.ads}';
+		window.location.href = baseurl + "?search=" + search;
+	}
+  });
+
+  function showContent(id) {
+    //$('.ui.modal.header').html(name);
+    //$('.ui.modal.description').html(content);
+    $('#' + id).modal('setting', 'transition', 'vertical flip').modal({
+    closable  : true,
+    onDeny    : function(){
+      return true;
+    },
+    onApprove : function() {
+      return true;
+    }
+  }).modal('show');
+  }
+
+  function deleteConfirm(id) {
+    $("#input_delete_modal").val(id);
+    //var url = '@{routes.BackofficeController.deleteAds("{id}")}';
+    //$("#input_url_delete_modal").val(url);
+    $("#input_url_delete_modal").val('delete ads');
+  }
+
+
+</script>
+}

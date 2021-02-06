@@ -1,0 +1,188 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil, topNavigation: views.html.backoffice.top_navigation,
+  modalView: views.html.modal, deleteModalView: views.html.components.deleteConfirmModal, selectView: views.html.components.selectDropdown)
+@(page: shared.SitePage, assets: AssetsFinder, records: Seq[shared.SiteCrawler], educationAndSkills: Seq[shared.NameValue])(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang)
+
+@mainTemplate(page, assets) {
+@topNavigation(page, assets, "", false)
+@deleteModalView(assets, "", "", None, modalClass = ".rule.delete")
+<div class="ui grid">
+  <div class="two wide column"></div>
+  <div class="twelve wide column">
+    <br/>
+    <br/>
+    <span id="error_message" style="color: red;display:none;"></span>
+    <br/>
+<form class="matchingrule ui form">
+  <h4 class="ui dividing header">New Job Fetch Detail</h4>
+  <input type="hidden" name="rule_id" id="rule_id" value="">
+  <input type="hidden" name="id" id="id" value="">
+  <div class="field">
+    <label>Source:</label>
+    <select name="source" id="source">
+      <option value="">---</option>
+      @for(v <- educationAndSkills) {
+      <option value="@{v.value}" @if(v.value.equalsIgnoreCase("team")) {selected="selected"}>@{v.name.toUpperCase}</option>
+      }
+    </select>
+  </div>
+  <div class="field" style="display:none;">
+    <label>Name:</label>
+    <input name="name" id="name" type="text" value="New Job" placeholder="Meaningful title or name"/>
+  </div>
+  <div class="field">
+    <label>URL:</label>
+    <input name="url" id="url" type="text" value="" placeholder=""/>
+  </div>
+  <div class="field">
+    <label>Priority:</label>
+    <input name="priority" id="priority" type="number" value="1000" placeholder=""/>
+    <help>High priority will be fetched before others during engine auto fetching.</help>
+  </div>
+  <div class="field">
+    <label>Description:</label>
+    <textarea name="description" id="description"></textarea>
+    <help>Put <b>competitors</b> anywhere in the description for fetching data from competitors site</help>
+    <input name="status" value="Pending" id="status" type="hidden" placeholder=""/>
+    <input name="fetchStatus" value="active" id="fetchStatus" type="hidden" placeholder=""/>
+  </div>
+  <div class="ui submit button">Save</div>
+  <div class="ui error message"></div>
+</form>
+    <div class="two wide column"></div>
+  </div>
+
+<table class="ui compact celled table">
+  <thead>
+  <tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>URL</th>
+    <th>Source</th>
+    <th>Detail</th>
+    <th>Action</th>
+  </tr>
+  </thead>
+  <tbody>
+  @records.map {record =>
+  @defining(record._key.getOrElse("")){ path =>
+  <tr id="box_@path">
+    <td class="collapsing">
+        @path
+      @defining(System.getenv("ARANGODB_WEB_URL")) {web =>
+      <a href="@web/_db/portal/_admin/aardvark/index.html#collection/crawlingsites/@path" target="_blank">Open in db</a>
+      }
+    </td>
+    <td>
+      @record.name<br/>
+      Status: @{record.result.map(_.status.getOrElse("")).getOrElse("")}
+    </td>
+      <td>
+        <a href="@record.url" target="_blank">@{record.name} [@record.priority]</a>
+      </td>
+    <td>
+        @record.source.getOrElse("")
+    </td>
+    <td>
+      @defining(record.getJobSearch()) { output =>
+        <a href="/backoffice/jobs?search=@{output}" target="_blank">Open Job</a>
+      }
+    </td>
+    <td>
+      @{record.status}<br/>
+      Time: @{record.getTimeTaken()} secs<br/>
+      <button class="ui danger button rule delete" onclick="deleteConfirm('@path');">Delete</button>
+    </td>
+  </tr>
+    }
+  }
+  </tbody>
+  <tfoot class="full-width">
+  </tfoot>
+</table>
+
+<script>
+  $('.combo.dropdown').dropdown({action: 'combo' });
+  $('.ui.form .ui.dropdown')
+    .dropdown({
+      allowAdditions: true
+  });
+  $('.ui.selection.dropdown')
+    .dropdown({
+      allowAdditions: true
+  });
+  $('#rules')
+    .dropdown({
+      allowAdditions: true
+  });
+  $('.ui.selection.dropdown')
+    .dropdown('restore defaults',{
+      allowAdditions: true
+  });
+
+var url = 'save fetch jobs';
+$('.form .submit')
+  .api({
+    action: url,
+    //on: 'now',
+    serializeForm: true,
+    method : 'POST',
+    contentType: "application/json",
+    dataType: "json",
+    beforeSend: function(settings) {
+      if (typeof(settings.data.source) == 'undefined') {
+          settings.data.source = "team";
+      }
+      if (typeof(settings.data.name) == 'undefined') {
+          settings.data.name = "New Job";
+      }
+      settings.data.priority = parseInt(settings.data.priority);
+      settings.data.name = settings.data.url;
+      settings.data.action = "update";
+      settings.data = JSON.stringify(settings.data);
+      console.log(settings.data);
+      return settings;
+    },
+    beforeXHR: function(xhr) {
+      return xhr;
+    },
+    successTest: function(response) {
+        console.log('response: ' + response);
+      return response.status == true || false;
+    },
+    onSuccess: function(response) {
+      // valid response and response.success = true
+      showMessageToaster('Success', response.message);
+    },
+    onFailure: function(response) {
+        showErrorToaster('Application Error', response.message);
+      // request failed, or valid response but response.success = false
+      if (tyepof(response.exception) != 'undefined') {
+      $("#error_message").html(response.message + response.exception);
+      } else {
+      $("#error_message").html(response.message);
+      }
+      $("#error_message").show();
+    },
+    onError: function(errorMessage) {
+      showErrorToaster('Application Error', errorMessage);
+      if (tyepof(response.exception) != 'undefined') {
+      $("#error_message").html(response.message + response.exception);
+      } else {
+      $("#error_message").html(response.message);
+      }
+      $("#error_message").show();
+      // invalid response
+    },
+    onAbort: function(errorMessage) {
+      showErrorToaster('User Error', errorMessage);
+      // navigated to a new page, CORS issue, or user canceled request
+    }
+  });
+
+  function deleteConfirm(id) {
+    $("#input_delete_modal").val(id);
+    $("#input_url_delete_modal").val('delete fetch jobs');
+  }
+
+</script>
+}

@@ -1,0 +1,354 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil, topNavigation: views.html.backoffice.top_navigation,
+  modalView: views.html.modal, deleteModalView: views.html.components.deleteConfirmModal, selectView: views.html.components.selectDropdown)
+@(page: shared.SitePage, assets: AssetsFinder, records: Seq[shared.MatchingRule], educationAndSkills: Seq[shared.NameValue] = Seq.empty, specialisation: List[String] = List.empty, levels: List[String] = List.empty)(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang)
+
+@mainTemplate(page, assets) {
+@topNavigation(page, assets, "", false)
+@deleteModalView(assets, "", "", None, modalClass = ".rule.delete")
+<div class="ui grid">
+  <div class="two wide column"></div>
+  <div class="twelve wide column">
+<form class="matchingrule ui form">
+  <h4 class="ui dividing header">Education and Skill Mapping</h4>
+  <input type="hidden" name="rule_id" id="rule_id" value="">
+  <input type="hidden" name="id" id="id" value="">
+  <div class="field">
+    <label>New Tag:</label>
+    <input name="tag" value="" id="tag" type="text" value="" placeholder="Use to create new tag. Predefined tags: Specialisation, Tags"/>
+    <help>Display tag, <b>Tag</b> will be used to load titles and <b>Specialisation</b> for specialisation / category fields.</help>
+  </div>
+  <div class="field">
+    <label>Display Tag:</label>
+    <select name="title" id="title">
+      <option value="">---</option>
+      @for(v <- educationAndSkills) {
+      <option value="@{v.value}">@{v.value}</option>
+      }
+    </select>
+    @***
+    <div class="ui fluid search selection dropdown rule">
+      <input type="hidden" name="title" value=""/>
+      <i class="dropdown icon"></i>
+      <div class="default text">Main title here</div>
+      <div class="menu">
+        @for(v <- educationAndSkills) {
+        <div class="item" data-value="@{v.value}" data-text="@{v.value}">
+          @{v.value}
+        </div>
+        }
+      </div>
+    </div>
+    ***@
+  </div>
+  <div class="field">
+    <label>Specialisation</label>
+      <select name="category" id="category">
+        <option value="">---</option>
+        @for(tag <- specialisation) {
+            <option value="@tag">@tag</option>
+          }
+      </select>
+  </div>
+  <div class="field">
+    <label>Level</label>
+    <select name="level" id="level">
+      <option value="">---</option>
+      @for(tag <- levels) {
+      <option value="@tag">@tag</option>
+      }
+    </select>
+  </div>
+    @***
+  <div class="field">
+    <div class="ui sub header">Matches</div>
+    <div class="ui fluid multiple search selection dropdown">
+      <input name="rules" id="matches" type="hidden">
+      <i class="dropdown icon"></i>
+      <div class="default text">Matching education and skill here</div>
+      <div class="menu">
+      </div>
+    </div>
+  </div>
+  ***@
+  <div class="field">
+    <label>Rules:</label>
+    <input name="tags" value="" id="tags" type="text" value="" placeholder="Comma separated rules"/>
+    <help>Multiple matching tags can be added by separating them by comma (,). Use + to add nearby keywords to be searched together within a distance of max 20 words.</help>
+  </div>
+  <div class="field">
+    <label>Description:</label>
+    <textarea name="description" id="description"></textarea>
+  </div>
+  <div class="field">
+    <label>Slug / URL:</label>
+    <input name="slug" value="" id="slug" type="text" value="" placeholder=""/>
+  </div>
+  <div class="ui submit button">Save</div>
+  <div class="ui error message"></div>
+</form>
+    <div class="two wide column"></div>
+  </div>
+
+<table class="ui compact celled table">
+  <thead>
+  <tr>
+    <th>ID</th>
+    <th>Display Tag</th>
+    <th>Category</th>
+    <th>Level</th>
+    <th>Matches</th>
+    <th>Action</th>
+  </tr>
+  </thead>
+  <tbody>
+  @records.map {record =>
+  @defining(record._key.getOrElse("")){ path =>
+  <tr id="box_@path">
+    <td class="collapsing">
+        @path
+    </td>
+    <td>
+      @record.name
+    </td>
+      <td>
+        @record.category
+      </td>
+    <td>
+        @record.rule
+    </td>
+    <td>
+      <div class="ui sub header">Matches</div>
+      <div class="ui fluid multiple search selection dropdown">
+        <input id="matches_@{path}" name="matches" type="hidden" value="@{record.matches.mkString(",")}">
+        <i class="dropdown icon"></i>
+        <div class="default text">Matching value</div>
+        <div class="menu">
+          @for(v <- record.matches) {
+          <div class="item" data-value="@{v}" data-text="@{v}">@{v}</div>
+          }
+        </div>
+      </div>
+    </td>
+    <td>
+      <button class="ui primary button update" onclick="set_values('@path','@{record.name}','@{record.rule}','@{record.category}','@{record.level.getOrElse("")}','@{record.description.getOrElse("")}','@{record.slug.getOrElse("")}','@{record.matches.mkString(",")}','@{record.matches.mkString(",")}');">Edit</button>
+      <button class="ui danger button rule delete" onclick="deleteConfirm('@path');">Delete</button>
+    </td>
+  </tr>
+    }
+  }
+  </tbody>
+  <tfoot class="full-width">
+  <tr>
+    <th></th>
+    <th colspan="4">
+        Click <b>Edit</b> to load parameters to be updated and then click <b>Save</b> to save.
+    </th>
+  </tr>
+  </tfoot>
+</table>
+
+<script>
+  $('.combo.dropdown').dropdown({action: 'combo' });
+  $('.ui.form .ui.dropdown')
+    .dropdown({
+      allowAdditions: true
+  });
+  $('.ui.selection.dropdown')
+    .dropdown({
+      allowAdditions: true
+  });
+  $('#rules')
+    .dropdown({
+      allowAdditions: true
+  });
+  $('.ui.selection.dropdown')
+    .dropdown('restore defaults',{
+      allowAdditions: true
+  });
+
+/*
+  $('.ui.form')
+  .form({
+    fields: {
+      matches: {
+        identifier: 'matches',
+        rules: [
+          {
+            type: 'empty',
+            prompt: 'You must provide at least one matching value'
+          }
+        ]
+      },
+      title: {
+        identifier: 'title',
+        rules: [
+          {
+            type: 'empty',
+            prompt: 'You must select top level education / skill'
+          }
+        ]
+      }
+    }
+  });
+*/
+
+function set_values(id, name, rule, category, level, description, slug, matches, tags) {
+$("#rule_id").val(id);
+$("#id").val(id);
+$("#tag").val(rule);
+$("#tag").attr("readonly","readonly");
+$("#name").val(name);
+$("#title").val(name);
+$("#level").val(level);
+$("#category").val(category);
+$("#description").val(description);
+$("#slug").val(slug);
+//$("#name").dropdown('set selected', name);
+$("#matches").dropdown('set selected', matches);
+$("#tags").val(tags);
+$("#tag").animate({
+        scrollTop: $("#tag").offset().top
+    }, 1000);
+}
+
+var url = 'save matching rule';
+$('.form .submit')
+  .api({
+    action: url,
+    //on: 'now',
+    serializeForm: true,
+    method : 'POST',
+    contentType: "application/json",
+    dataType: "json",
+    beforeSend: function(settings) {
+      // cancel request
+      //if(!isLoggedIn) {
+        //showErrorToaster('Authentication Error', 'Please login');
+        //return false;
+      //}
+      //console.log(settings.data);
+      if (typeof(settings.data.category) == 'undefined') {
+          settings.data.category = "";
+      }
+      if (typeof(settings.data.level) == 'undefined') {
+          settings.data.level = "";
+      }
+      if (typeof(settings.data.title) == 'undefined') {
+          settings.data.title = "";
+      }
+      if (typeof(settings.data.matches) != 'undefined') {
+        settings.data.matches = settings.data.matches.split(",");
+      } else {
+        settings.data.matches = [];
+      }
+      settings.data.tags = settings.data.tags.split(",");
+      settings.data.action = "update";
+      settings.data = JSON.stringify(settings.data);
+      console.log(settings.data);
+      return settings;
+    },
+    beforeXHR: function(xhr) {
+      return xhr;
+    },
+    successTest: function(response) {
+        console.log('response: ' + response);
+      return response.status == true || false;
+    },
+    onSuccess: function(response) {
+      // valid response and response.success = true
+      showMessageToaster('Success', response.message);
+    },
+    onFailure: function(response) {
+        showErrorToaster('Application Error', response.message);
+      // request failed, or valid response but response.success = false
+    },
+    onError: function(errorMessage) {
+      showErrorToaster('Application Error', errorMessage);
+      // invalid response
+    },
+    onAbort: function(errorMessage) {
+      showErrorToaster('User Error', errorMessage);
+      // navigated to a new page, CORS issue, or user canceled request
+    }
+  });
+
+  function deleteConfirm(id) {
+    $("#input_delete_modal").val(id);
+    $("#input_url_delete_modal").val('delete matching rule');
+  }
+
+function update_or_delete_rule(id, title, action) {
+var matches = $("#matches_" + id).val();
+var tags = $("#tags_" + id).val();
+var level = $("#level_" + id).val();
+var category = $("#category_" + id).val();
+var url = 'save matching rule';
+var method = "POST";
+if (action == "Delete") {
+  url = 'delete matching rule';
+  method = "DELETE";
+}
+$(this)
+  .api({
+    action: url,
+    on: 'now',
+    //serializeForm: true,
+    method : method,
+    contentType: "application/json",
+    dataType: "json",
+    urlData: {
+        id: id,
+        action: action
+    },
+    data: {
+      id: id,
+      title: title,
+      matches: matches,
+      tags: tags,
+      level: level,
+      category: category,
+      action: action
+    },
+    beforeSend: function(settings) {
+      // cancel request
+      //if(!isLoggedIn) {
+        //showErrorToaster('Authentication Error', 'Please login');
+        //return false;
+      //}
+      console.log(settings.data);
+      settings.data.matches = settings.data.matches.split(",");
+      settings.data.tags = settings.data.tags.split(",");
+      settings.data = JSON.stringify(settings.data);
+      console.log(settings.data);
+      return settings;
+    },
+    beforeXHR: function(xhr) {
+      return xhr;
+    },
+    successTest: function(response) {
+        console.log('response: ' + response);
+      return response.status == true || false;
+    },
+    onSuccess: function(response) {
+      // valid response and response.success = true
+      showMessageToaster('Success', response.message);
+      if (action == "Delete") {
+        $("#box_" + id).hide();
+      }
+    },
+    onFailure: function(response) {
+        showErrorToaster('Application Error', response.message);
+      // request failed, or valid response but response.success = false
+    },
+    onError: function(errorMessage) {
+      showErrorToaster('Application Error', errorMessage);
+      // invalid response
+    },
+    onAbort: function(errorMessage) {
+      showErrorToaster('User Error', errorMessage);
+      // navigated to a new page, CORS issue, or user canceled request
+    }
+  });
+  }
+</script>
+}

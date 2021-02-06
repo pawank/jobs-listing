@@ -1,0 +1,5 @@
+#log-panel {
+    padding-top: 7em;
+    max-height:calc(100vh - 4em);
+    overflow: auto;
+}

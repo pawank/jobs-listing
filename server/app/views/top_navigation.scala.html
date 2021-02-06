@@ -1,0 +1,150 @@
+@this(mainTemplate: views.html.base, webJarsUtil: org.webjars.play.WebJarsUtil)
+@(page: shared.SitePage, assets: AssetsFinder, query: String = "", showBanner: Boolean = true, dynamicBanner: String = "")(implicit r: Request[_], rh: RequestHeader, messages: play.api.i18n.MessagesApi, lang: play.api.i18n.Lang)
+
+@page.slug.map { slug =>
+<div class="ui inverted vertical @if(showBanner){masthead} center aligned segment">
+    <div class="ui container">
+        <div class="ui large secondary inverted pointing menu">
+            <a class="toc item">
+                <img src="@assets.path("images/sarkarijobs.jpeg")" class="logo" style="width:30%;height:30%;"/>
+                <i class="sidebar icon"></i>
+            </a>
+            <a class="@if(slug.equals("/welcome") || slug.equals("/")) {active} item" href="/">Home</a>
+            <a class="@if(slug.equals("/jobs")) {active} item" href="/jobs">Jobs</a>
+            <a class="@if(slug.equals("/app")) {active} item" href="/app">App</a>
+            <a class="@if(slug.equals("/about-us")) {active} item" href="/about-us">About Us</a>
+            <div class="right item">
+                @***
+                <button class="ui facebook button">
+                    <i class="facebook icon"></i>
+                    Facebook
+                </button>
+                <button class="ui linkedin button">
+                    <i class="linkedin icon"></i>
+                    LinkedIn
+                </button>
+                ***@
+                @***
+                <a class="@if(slug.equals("/signin")) {active} ui inverted button" href="/signin">Log in</a>
+                <a class="@if(slug.equals("/signout")) {active} ui inverted button" href="/signout">Sign Up</a>
+                ***@
+                @if(!slug.equals("/home") && !slug.equals("/")) {
+                <div class="ui fluid category search" id="box_top_search">
+                    <div class="ui right icon input">
+                        <input id="top_search" class="" type="text" placeholder="Search job, employer, education, skills" value="@query" name="value">
+                        <i class="search icon"></i>
+                    </div>
+                    <div class="results" id="search_results"></div>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+    @if(showBanner) {
+    <div class="ui text container">
+        <h1 class="ui inverted header">
+            @Html(page.bannerTitle.getOrElse(""))
+        </h1>
+        <h2>
+            @Html(page.banner.getOrElse("India's Best Portal for All Government Jobs Notifications"))
+        </h2>
+        @if(slug.equals("/home") || slug.equals("/")) {
+        <div class="ui fluid category search ten wide" id="box_top_search">
+            <div class="ui right icon input">
+                <input id="top_search" class="huge" type="text" placeholder="Search job, employer, education, skills" value="@query" name="value">
+                <i class="search icon"></i>
+            </div>
+            <div class="results" id="search_results"></div>
+        </div>
+        }
+        @***
+        <div class="ui huge primary button">Get Started <i class="right arrow icon"></i></div>
+        ***@
+        <h3>
+            @if(dynamicBanner.isEmpty) {
+            @Html(page.banner.getOrElse(s"Find in Thousands of Notifications and Lakhs of Jobs"))
+            } else {
+            @Html(dynamicBanner)
+            }
+        </h3>
+    </div>
+    }
+</div>
+<script type="text/javascript">
+  $('#top_search').keypress(function(event){
+	var keycode = (event.keyCode ? event.keyCode : event.which);
+	if(keycode == '13'){
+		console.log('You pressed a "enter" key in textbox');
+		var search = $("#top_search").val();
+    if (search.indexOf("&") >= 0) {
+      if (search.indexOf('"') >= 0) {
+        var tokens = search.split("&");
+        search = tokens[0] + " " + tokens[1];
+      }
+    } else if (search.indexOf("/") >= 0) {
+      if (search.indexOf('"') >= 0) {
+
+      } else {
+        search = "\"" + search + "\"";
+      }
+    }
+    console.log('Home ENTER final search = ' + search);
+		var baseurl = '@{routes.JobController.jobs}';
+		window.location.href = baseurl + "?query=" + search;
+	}
+  });
+@***
+$(document).ready(function() {
+        $('.ui.search')
+        .search({
+            apiSettings: {
+            onResponse: function(serverResponse) {
+              var
+                response = {
+                  results : {}
+                }
+              ;
+              $.each(serverResponse.items, function(index, item) {
+                var
+                  language   = item.jobType || 'Unknown',
+                  maxResults = 8
+                ;
+                if(index >= maxResults) {
+                  return false;
+                }
+                // create new language category
+                if(response.results[language] === undefined) {
+                  response.results[language] = {
+                    name    : language,
+                    results : []
+                  };
+                }
+                // add result to category
+                response.results[language].results.push({
+                  title       : item.title,
+                  description : item.company,
+                  url         : item.refLink
+                });
+              });
+              return response;
+            },
+            url: '/jobs?query={query}',
+            method: 'GET',
+            cache: false,
+            beforeSend: function(settings) {
+            var value = settings.urlData.query;
+            console.log("QS = " + value);
+            if ((value != null) && (value.length <= 2)) {
+                return false;
+            }
+            return settings;
+            }
+          },
+          //type: 'category',
+          minCharacters : 3
+        });
+});
+***@
+</script>
+}
+
